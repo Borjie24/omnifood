@@ -1,0 +1,50 @@
+<template>
+  <div>
+    <b-form-group
+      id="fieldset-1"
+      description="Let us know your name."
+      label="Enter your name"
+      label-for="input-1"
+      valid-feedback="Thank you!"
+      :invalid-feedback="invalidFeedback"
+      :state="state"
+    >
+      <b-form-input
+        id="input-1"
+        v-model="limitedName"
+        :state="state"
+      trim
+        maxlength="10"
+      ></b-form-input>
+    </b-form-group>
+    <p>{{ remainingCharacters }} characters left</p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      name: '',
+      maxChars: 10,
+      state: null,
+      invalidFeedback: "Invalid input"
+    };
+  },
+  computed: {
+    limitedName: {
+      get() {
+        return this.name;
+      },
+      set(value) {
+        if (value.length <= this.maxChars) {
+          this.name = value;
+        }
+      }
+    },
+    remainingCharacters() {
+      return this.maxChars - this.name.length;
+    }
+  }
+};
+</script>
