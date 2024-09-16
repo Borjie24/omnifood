@@ -48,3 +48,65 @@ export default {
   }
 };
 </script>
+
+<template>
+  <div>
+    <b-form-input 
+      v-model="number" 
+      placeholder="Enter your Age" 
+      type="text" 
+      @input="limitInput"
+    ></b-form-input>
+    <div class="mt-2">Value: {{ number }}</div>
+    <b-button @click="submit">Submit</b-button>
+    <div v-if="errorMessage" class="mt-2 text-danger">{{ errorMessage }}</div>
+  </div>
+</template>
+
+<script>
+  export default {
+    data() {
+      return {
+        number: '',
+        errorMessage: ''
+      }
+    },
+    methods: {
+      limitInput(event) {
+        let value = event.target.value;
+
+        // Remove any non-numeric characters
+        value = value.replace(/\D/g, '');
+
+        // Limit to 2 digits
+        if (value.length > 2) {
+          value = value.slice(0, 2);
+        }
+        
+        this.number = value;
+      },
+      submit() {
+        const numericValue = parseInt(this.number);
+
+        if (isNaN(numericValue)) {
+          this.errorMessage = 'Please enter a valid number.';
+        } else if (numericValue < 18) {
+          this.errorMessage = 'Age must be at least 18.';
+        } else if (numericValue > 99) {
+          this.errorMessage = 'Age cannot exceed 99.';
+        } else {
+          this.errorMessage = '';
+          // Handle successful submission here
+          alert('Form submitted successfully!');
+        }
+      }
+    }
+  }
+</script>
+
+<style scoped>
+.text-danger {
+  color: red;
+}
+</style>
+
