@@ -48,7 +48,6 @@ export default {
   }
 };
 </script>
-
 <template>
   <div>
     <b-form-input 
@@ -86,9 +85,9 @@ export default {
         this.number = value;
       },
       submit() {
-        const numericValue = parseInt(this.number);
+        const numericValue = parseInt(this.number, 10);
 
-        if (isNaN(numericValue)) {
+        if (isNaN(numericValue) || this.number === '') {
           this.errorMessage = 'Please enter a valid number.';
         } else if (numericValue < 18) {
           this.errorMessage = 'Age must be at least 18.';
