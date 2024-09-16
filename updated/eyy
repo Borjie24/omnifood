@@ -109,3 +109,67 @@ export default {
 }
 </style>
 
+<template>
+  <div>
+    <b-form-input 
+      v-model="phoneNumber" 
+      placeholder="Enter your Phone Number" 
+      type="text" 
+      @input="formatPhoneNumber"
+    ></b-form-input>
+    <div class="mt-2">Value: {{ phoneNumber }}</div>
+    <b-button @click="submit">Submit</b-button>
+    <div v-if="errorMessage" class="mt-2 text-danger">{{ errorMessage }}</div>
+  </div>
+</template>
+
+<script>
+  export default {
+    data() {
+      return {
+        phoneNumber: '',
+        errorMessage: ''
+      }
+    },
+    methods: {
+      formatPhoneNumber(event) {
+        let value = event.target.value;
+
+        // Remove non-numeric characters
+        value = value.replace(/\D/g, '');
+
+        // Limit to 11 digits (without country code)
+        if (value.length > 11) {
+          value = value.slice(0, 11);
+        }
+
+        // Optionally add a prefix
+        if (value.startsWith('9') && value.length === 11) {
+          value = '+63' + value;
+        } else if (value.startsWith('0')) {
+          value = '+63' + value.slice(1);
+        }
+        
+        this.phoneNumber = value;
+      },
+      submit() {
+        const phoneRegex = /^\+639\d{9}$/;
+
+        if (!phoneRegex.test(this.phoneNumber)) {
+          this.errorMessage = 'Please enter a valid Philippine cellphone number.';
+        } else {
+          this.errorMessage = '';
+          // Handle successful submission here
+          alert('Form submitted successfully!');
+        }
+      }
+    }
+  }
+</script>
+
+<style scoped>
+.text-danger {
+  color: red;
+}
+</style>
+
