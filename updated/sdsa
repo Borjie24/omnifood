@@ -1,0 +1,46 @@
+<template>
+  <div>
+    <b-form-input 
+      v-model="inputValue" 
+      placeholder="Enter value" 
+      type="text"
+    ></b-form-input>
+    <b-button @click="sendValue">Send Value</b-button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      inputValue: ''
+    }
+  },
+  methods: {
+    sendValue() {
+      this.$emit('value-changed', this.inputValue);
+    }
+  }
+}
+</script>
+
+<template>
+  <div>
+    <child-component @value-changed="handleValueChange"></child-component>
+  </div>
+</template>
+
+<script>
+import ChildComponent from './ChildComponent.vue'; // Adjust the import path as needed
+
+export default {
+  components: {
+    ChildComponent
+  },
+  methods: {
+    handleValueChange(value) {
+      console.log('Emitted value:', value);
+    }
+  }
+}
+</script>
