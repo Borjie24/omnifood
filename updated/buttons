@@ -1,0 +1,21 @@
+methods: {
+  toggleProperty(index, property) {
+    if (this.tropas[index] && this.tropas[index].hasOwnProperty(property)) {
+      this.tropas[index][property] = !this.tropas[index][property];
+    }
+  },
+  removeTropa(index) {
+    this.tropas.splice(index, 1);
+  },
+  clickButtonAction(actionType, index) {
+    const actionMap = {
+      detailButton: () => this.toggleProperty(index, 'showDetails'),
+      removeButton: () => this.removeTropa(index),
+      favoriteButton: () => this.toggleProperty(index, 'favorites')
+    };
+    
+    if (actionMap[actionType]) {
+      actionMap[actionType]();
+    }
+  }
+}
