@@ -1,0 +1,79 @@
+data() {
+    return {
+        isError: false,
+        inputData: {
+            nickname: '',
+            fullname: '',
+            age: '',
+            birthdate: '',
+            email: '',
+            phoneNumber: '',
+            zodiacSign: '',
+            loveLanguages: [],
+            drink: '',
+            smoke: '',
+            motto: ''
+        }
+    };
+},
+
+methods: {
+    handleAdd() {
+        // Validate the form and check for errors
+        this.isError = false; // Reset the error state before validation
+        const valid = this.formValidity();
+
+        // If the form is valid, proceed to add to the list
+        if (valid && !this.isError) {
+            this.tropaList.push({ ...this.inputData }); // Push a copy of the inputData
+            alert("Form submitted successfully!"); // Alert on successful submission
+
+            // Optionally reset the inputData after submission
+            this.resetForm();
+        }
+    },
+
+    formValidity() {
+        // Define your validation rules in an array
+        const validationRules = [
+            { field: 'nickname', pattern: this.nicknamePattern, message: 'Invalid nickname', value: this.inputData.nickname },
+            { field: 'fullname', pattern: this.fullnamePattern, message: 'Invalid fullname', value: this.inputData.fullname },
+            { field: 'email', pattern: this.emailPattern, message: 'Invalid email', value: this.inputData.email },
+            { field: 'loveLanguages', condition: this.inputData.loveLanguages.length === 0, message: 'Choose love language' },
+            { field: 'zodiacSign', condition: this.inputData.zodiacSign === '', message: 'Choose zodiac sign' },
+            { field: 'motto', condition: this.inputData.motto === '', message: 'Write your motto' }
+        ];
+
+        // Process validation rules
+        validationRules.forEach(rule => {
+            const isInvalid = rule.pattern 
+                ? (rule.value.trim() === '' || !rule.pattern.test(rule.value))
+                : rule.condition;
+
+            if (isInvalid) {
+                alert(rule.message);
+                this.isError = true; // Set the error flag
+            }
+        });
+
+        // Return false if any error was found
+        return !this.isError;
+    },
+
+    resetForm() {
+        // Reset the input data
+        this.inputData = {
+            nickname: '',
+            fullname: '',
+            age: '',
+            birthdate: '',
+            email: '',
+            phoneNumber: '',
+            zodiacSign: '',
+            loveLanguages: [],
+            drink: '',
+            smoke: '',
+            motto: ''
+        };
+    }
+}
