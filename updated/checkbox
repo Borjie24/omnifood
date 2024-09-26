@@ -1,0 +1,82 @@
+<template>
+  <div>
+    <!-- Radio Buttons -->
+    <b-form-group label="Individual radios" v-slot="{ ariaDescribedby }">
+      <span id="radioHelp" class="form-text">Please select one of the options below.</span>
+      <b-form-radio v-model="radioSelected" :aria-describedby="ariaDescribedby" name="some-radios" value="A">Option A</b-form-radio>
+      <b-form-radio v-model="radioSelected" :aria-describedby="ariaDescribedby" name="some-radios" value="B">Option B</b-form-radio>
+    </b-form-group>
+
+    <div class="mt-3" v-if="radioSubmitted">Selected Radio: <strong>{{ radioSelected }}</strong></div>
+
+    <!-- Select Dropdowns -->
+    <b-form-select v-model="selectSelected" :options="options"></b-form-select>
+    <b-form-select v-model="selectSelected" :options="options" size="sm" class="mt-3"></b-form-select>
+    
+    <div class="mt-3" v-if="selectSubmitted">Selected Dropdown: <strong>{{ selectSelected }}</strong></div>
+
+    <!-- Checkbox -->
+    <b-form-checkbox
+      id="checkbox-1"
+      v-model="checkboxStatus"
+      name="checkbox-1"
+      value="accepted"
+      unchecked-value="not_accepted"
+    >
+      I accept the terms and use
+    </b-form-checkbox>
+
+    <div class="mt-3" v-if="checkboxSubmitted">Current Status: <strong>{{ checkboxStatus }}</strong></div>
+
+    <!-- Submit Button -->
+    <b-button @click="handleSubmit" variant="primary" class="mt-3">Submit</b-button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      radioSelected: '',
+      selectSelected: null,
+      checkboxStatus: 'not_accepted', // Default checkbox status
+      options: [
+        { value: null, text: 'Please select an option' },
+        { value: 'a', text: 'This is First option' },
+        { value: 'b', text: 'Selected Option' },
+        { value: { C: '3PO' }, text: 'This is an option with object value' },
+        { value: 'd', text: 'This one is disabled', disabled: true }
+      ],
+      radioSubmitted: false,
+      selectSubmitted: false,
+      checkboxSubmitted: false
+    }
+  },
+  methods: {
+    handleSubmit() {
+      // Handle Radio Button Submission
+      if (this.radioSelected) {
+        alert(`You selected Radio: ${this.radioSelected}`); // Show alert with selected radio value
+        this.radioSubmitted = true; // Set submitted to true for radio
+        this.radioSelected = ''; // Reset radio selection
+      } else {
+        alert('Please select an option for the radio buttons.');
+      }
+
+      // Handle Select Dropdown Submission
+      if (this.selectSelected) {
+        alert(`You selected Dropdown: ${JSON.stringify(this.selectSelected)}`); // Show alert with selected dropdown value
+        this.selectSubmitted = true; // Set submitted to true for select
+        this.selectSelected = null; // Reset select selection
+      } else {
+        alert('Please select an option for the dropdowns.');
+      }
+
+      // Handle Checkbox Submission
+      alert(`Current Checkbox Status: ${this.checkboxStatus}`); // Show alert with current checkbox status
+      this.checkboxSubmitted = true; // Set submitted to true for checkbox
+      this.checkboxStatus = 'not_accepted'; // Reset the checkbox to unchecked state
+    }
+  }
+}
+</script>
