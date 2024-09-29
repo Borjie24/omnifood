@@ -1,0 +1,139 @@
+clickButtons(actionType, index) {
+  const actions = {
+    showDetails: () => {
+      const itemIndex = this.showIndex.indexOf(index);
+      if (itemIndex === -1) {
+        this.showIndex.push(index);  // Push the correct index
+      } else {
+        this.showIndex.splice(itemIndex, 1);  // Remove the correct itemIndex
+      }
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
+    },
+    removeTropa: () => {
+      this.tropaList.splice(index, 1);
+    },
+    toggleFavorite: () => {
+      this.favoriteButton = !this.favoriteButton;
+      this.showIndex = index;
+    }
+  };
+
+  actions[actionType]?.(); // Call the function corresponding to actionType if it exists
+}
+
+------------------------------------------------
+clickButtons(actionType, index) {
+  const actions = {
+    showDetails: () => {
+      const itemIndex = this.showIndex.indexOf(index);
+      if (itemIndex === -1) {
+        // If index is not in showIndex, add it
+        this.showIndex.push(index); 
+      } else {
+        // If index is already in showIndex, remove it
+        this.showIndex.splice(itemIndex, 1); 
+      }
+      // Toggle the state of showDetailsButton for the given index
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
+    },
+    removeTropa: () => {
+      // Remove the item from tropaList at the given index
+      this.tropaList.splice(index, 1);
+    },
+    toggleFavorite: () => {
+      // Toggle the favorite button
+      this.favoriteButton = !this.favoriteButton;
+      // Set showIndex to the current index
+      this.showIndex = index;
+    }
+  };
+
+  // Execute the function based on actionType if it exists
+  actions[actionType]?.(); 
+}
+-------------------------------------------------------
+clickButtons(actionType, index) {
+  const actions = {
+    showDetails: () => {
+      // Add index if not present; remove if already present
+      this.showIndex.includes(index)
+        ? this.showIndex.splice(this.showIndex.indexOf(index), 1) 
+        : this.showIndex.push(index);
+      
+      // Toggle the state of showDetailsButton for the given index
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
+    },
+    removeTropa: () => {
+      // Remove the item from tropaList at the given index
+      this.tropaList.splice(index, 1);
+    },
+    toggleFavorite: () => {
+      // Toggle the favorite button
+      this.favoriteButton = !this.favoriteButton;
+      // Set showIndex to the current index
+      this.showIndex = index;
+    }
+  };
+
+  // Execute the function based on actionType if it exists
+  actions[actionType]?.(); 
+}
+
+-------------------------------------------------
+<template>
+  <div v-for="(tropa, index) in tropaList" :key="tropa.id">
+    <!-- Using dynamic component with reusable component -->
+    <component
+      :is="tropa.componentName"
+      :input="tropa"
+      @action="clickButtons($event, index)"
+    >
+      <!-- Optional: Include buttons here if needed -->
+      <button @click="clickButtons('showDetails', index)">Show Details</button>
+      <button @click="clickButtons('removeTropa', index)">Remove Tropa</button>
+      <button @click="clickButtons('toggleFavorite', index)">Favorite</button>
+    </component>
+
+    <!-- Conditionally show details for each item -->
+    <div v-if="showDetailsButton[index]">
+      <p>{{ tropa.details }}</p>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  inject: ['tropaList'],
+  data() {
+    return {
+      showDetailsButton: [], // Tracks details for each index
+      favoriteButton: [], // Tracks favorite for each index
+      showIndex: [], // Tracks indices where buttons are clicked
+    };
+  },
+  methods: {
+    clickButtons(actionType, index) {
+      const actions = {
+        showDetails: () => {
+          // Toggle showDetailsButton state for this index
+          this.$set(this.showDetailsButton, index, !this.showDetailsButton[index]);
+        },
+        removeTropa: () => {
+          // Remove tropa from list and update button states
+          this.tropaList.splice(index, 1);
+          this.showDetailsButton.splice(index, 1);
+          this.favoriteButton.splice(index, 1);
+        },
+        toggleFavorite: () => {
+          // Toggle favorite state for this index
+          this.$set(this.favoriteButton, index, !this.favoriteButton[index]);
+        },
+      };
+
+      // Execute corresponding action
+      actions[actionType]?.();
+    },
+  },
+};
+</script>
+
