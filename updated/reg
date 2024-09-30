@@ -8,7 +8,7 @@ formValidity() {
     { field: 'email', pattern: this.emailPattern, message: 'Invalid email', value: this.input.email },
     { field: 'loveLanguage', condition: this.input.loveLanguage !== 3, message: 'Choose love language' },
     { field: 'zodiacSign', condition: this.input.zodiacSign === '', message: 'Choose zodiac sign' },
-    { field: 'motto', condition: this.input.motto === '', message: 'Write your motto' }
+    { field: 'motto', condition: this.input.motto.trim() === '', message: 'Write your motto' }
   ];
 
   // Process validation rules
