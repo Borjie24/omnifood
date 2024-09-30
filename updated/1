@@ -48,3 +48,48 @@ clickButtons(actionType, index) {
   actions[actionType]?.();
   console.log('After action:', this.showIndex, this.showDetailsButton, this.favoriteButton);
 }
+----------------------------------
+data() {
+  return {
+    showIndex: [],               // List of indices for showing details
+    showDetailsButton: {},       // Dictionary to store button states per index
+    tropaList: [],               // Array of tropa items
+    favoriteButton: false        // Boolean for favorite button toggle
+  };
+}
+
+------------------------
+clickButtons(actionType, index) {
+  console.log('Action type:', actionType, 'Index:', index);
+  console.log('Before action:', this.showIndex, this.showDetailsButton, this.favoriteButton);
+
+  const actions = {
+    showDetails: () => {
+      const itemIndex = this.showIndex.indexOf(index);
+      if (itemIndex === -1) {
+        this.showIndex.push(index);  // Add index if not present
+      } else {
+        this.showIndex.splice(itemIndex, 1);  // Remove index if present
+      }
+
+      // Ensure showDetailsButton[index] is initialized and reactive
+      this.$set(this.showDetailsButton, index, !this.showDetailsButton[index]);
+    },
+    removeTropa: () => {
+      this.tropaList.splice(index, 1);  // Remove tropa at the specified index
+    },
+    toggleFavorite: () => {
+      this.favoriteButton = !this.favoriteButton;  // Toggle the favorite button
+      this.showIndex = index;  // Set showIndex to the current index
+    }
+  };
+
+  if (actions[actionType]) {
+    actions[actionType]();  // Execute the appropriate action
+  } else {
+    console.error('Invalid action type:', actionType);  // Log an error if actionType is invalid
+  }
+
+  console.log('After action:', this.showIndex, this.showDetailsButton, this.favoriteButton);
+}
+
