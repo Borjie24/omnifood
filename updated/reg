@@ -27,144 +27,39 @@ formValidity() {
 
 ----------------------------
 
-<template>
-  <div role="group">
-    <!-- Dynamic form fields rendering -->
-    <div v-for="(label, field) in fields" :key="field">
-      <label :for="'input-' + field">{{ label }}:</label>
-      <b-form-input
-        :id="'input-' + field"
-        v-model="input[field]"
-        :state="getFieldState(field)"
-        :placeholder="'Enter your ' + label.toLowerCase()"
-        trim
-      ></b-form-input>
-      <b-form-invalid-feedback v-if="showFeedback[field]">
-        {{ errorMessages[field] }}
-      </b-form-invalid-feedback>
-    </div>
+methods: {
+  formValidity() {
+    // Reset error flag before validation
+    this.isError = false;
 
-    <!-- Submit button -->
-    <b-button @click="submitForm" variant="primary">Submit</b-button>
-  </div>
-</template>
+    // Define your validation rules in an array
+    const validationRules = [
+      { field: 'nickname', pattern: this.nicknamePattern, message: 'Invalid nickname', value: this.input.nickname },
+      { field: 'fullname', pattern: this.fullnamePattern, message: 'Invalid fullname', value: this.input.fullname },
+      { field: 'email', pattern: this.emailPattern, message: 'Invalid email', value: this.input.email },
+      { field: 'loveLanguage', condition: this.input.loveLanguage !== 3, message: 'Choose love language' },
+      { field: 'zodiacSign', condition: this.input.zodiacSign === '', message: 'Choose zodiac sign' },
+      { field: 'motto', condition: this.input.motto.trim() === '', message: 'Write your motto' }
+    ];
 
-<script>
-  export default {
-    data() {
-      return {
-        // Form field data and patterns in one structure
-        fields: {
-          nickname: 'Nickname',
-          fullname: 'Fullname',
-          email: 'Email',
-          loveLanguage: 'Love Language',
-          zodiacSign: 'Zodiac Sign',
-          motto: 'Motto',
-        },
-        input: {
-          nickname: '',
-          fullname: '',
-          email: '',
-          loveLanguage: null,
-          zodiacSign: '',
-          motto: ''
-        },
-        patterns: {
-          nickname: /^[A-Za-z0-9_]{3,}$/,
-          fullname: /^[A-Za-z\s]{3,}$/,
-          email: /^[^@]+@[^@]+\.[^@]+$/
-        },
-        showFeedback: {
-          nickname: false,
-          fullname: false,
-          email: false,
-          loveLanguage: false,
-          zodiacSign: false,
-          motto: false
-        },
-        errorMessages: {
-          nickname: '',
-          fullname: '',
-          email: '',
-          loveLanguage: '',
-          zodiacSign: '',
-          motto: ''
-        },
-        customValidations: {
-          loveLanguage: value => value !== 3,
-          zodiacSign: value => value === '',
-          motto: value => value === ''
-        },
-        isError: false
-      };
-    },
-    methods: {
-      // Get the state of a field dynamically
-      getFieldState(field) {
-        return this.showFeedback[field] ? this.validateField(field) : null;
-      },
-      // General field validation
-      validateField(field) {
-        if (this.patterns[field]) {
-          return this.patterns[field].test(this.input[field]);
-        } else if (this.customValidations[field]) {
-          return !this.customValidations[field](this.input[field]);
+    // Collect all validation errors
+    const errors = validationRules
+      .map(rule => {
+        if (rule.pattern) {
+          return (rule.value.trim() === '' || !rule.pattern.test(rule.value)) ? rule.message : null;
         }
-        return true; // Default to valid if no validation rule exists
-      },
-      // Validate the entire form
-      formValidity() {
-        this.isError = false;
+        return rule.condition ? rule.message : null;
+      })
+      .filter(Boolean); // Keep only the messages that are not null
 
-        // Reset feedback visibility and error messages
-        Object.keys(this.fields).forEach(field => {
-          this.showFeedback[field] = false;
-          this.errorMessages[field] = '';
-        });
-
-        // Iterate over fields and validate
-        Object.keys(this.fields).forEach(field => {
-          if (!this.validateField(field)) {
-            this.showFeedback[field] = true;
-            this.errorMessages[field] = this.getErrorMessage(field);
-            this.isError = true;
-          }
-        });
-      },
-      // Get error message for a field dynamically
-      getErrorMessage(field) {
-        const defaultMessages = {
-          nickname: 'Invalid nickname',
-          fullname: 'Invalid fullname',
-          email: 'Invalid email',
-          loveLanguage: 'Choose love language',
-          zodiacSign: 'Choose zodiac sign',
-          motto: 'Write your motto'
-        };
-        return defaultMessages[field];
-      },
-      // Handle form submission
-      submitForm() {
-        this.formValidity();
-        if (!this.isError) {
-          // Perform form submission logic here
-          alert('Form submitted successfully!');
-          this.resetForm();
-        }
-      },
-      // Reset the form fields
-      resetForm() {
-        Object.keys(this.input).forEach(field => {
-          this.input[field] = '';
-        });
-        Object.keys(this.showFeedback).forEach(field => {
-          this.showFeedback[field] = false;
-        });
-        Object.keys(this.errorMessages).forEach(field => {
-          this.errorMessages[field] = '';
-        });
-      }
+    // Check if there are any errors
+    if (errors.length > 0) {
+      // Show all errors at once in an alert or display on the UI
+      alert(errors.join('\n')); 
+      this.isError = true;
+    } else {
+      // If no errors, the form is valid
+      this.isError = false;
     }
-  };
-</script>
+  }
+}
