@@ -152,3 +152,52 @@ clickButtons(actionType, index) {
   actions[actionType]?.(); // Call the function corresponding to actionType if it exists
 }
 
+
+---------------------------
+showDetails: () => {
+  if (typeof this.showDetailsButton[index] === 'undefined') {
+    this.$set(this.showDetailsButton, index, true);  // Vue's $set ensures reactivity
+  } else {
+    this.showDetailsButton[index] = !this.showDetailsButton[index];
+  }
+
+  const itemIndex = this.showIndex.indexOf(index);
+  if (itemIndex === -1) {
+    this.showIndex.push(index);  // Push the correct index
+  } else {
+    this.showIndex.splice(itemIndex, 1);  // Remove the correct itemIndex
+  }
+}
+-------------------------------------
+clickButtons(actionType, index) {
+  const actions = {
+    showDetails: () => {
+      // Ensure showDetailsButton is reactive for the given index
+      if (typeof this.showDetailsButton[index] === 'undefined') {
+        this.$set(this.showDetailsButton, index, false);  // Set default value if not present
+      }
+
+      // Toggle the showDetailsButton for the given index
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
+
+      // Manage showIndex array to track visible items
+      const itemIndex = this.showIndex.indexOf(index);
+      if (itemIndex === -1) {
+        this.showIndex.push(index);  // Add index if not present
+      } else {
+        this.showIndex.splice(itemIndex, 1);  // Remove index if already present
+      }
+    },
+    removeTropa: () => {
+      this.tropaList.splice(index, 1);
+    },
+    toggleFavorite: () => {
+      this.favoriteButton = !this.favoriteButton;
+      this.showIndex = index;
+    }
+  };
+
+  // Call the function corresponding to actionType if it exists
+  actions[actionType]?.();
+}
+
