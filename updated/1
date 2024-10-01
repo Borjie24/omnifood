@@ -20,7 +20,7 @@ clickButtons(actionType, index) {
 
   actions[actionType]?.(); // Call the function corresponding to actionType if it exists
 }
-
+<b-card v-if="showDetailsButton[index] && showIndex == index"></b-card>
 ------------------------------------------------
 clickButtons(actionType, index) {
   const actions = {
