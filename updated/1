@@ -23,18 +23,23 @@ clickButtons(actionType, index) {
 
 ------------------------------------------------
 clickButtons(actionType, index) {
-  console.log('Action type:', actionType, 'Index:', index);
-  console.log('Before action:', this.showIndex, this.showDetailsButton, this.favoriteButton);
-  
   const actions = {
     showDetails: () => {
+      // Initialize this.showDetailsButton if it doesn't exist for each index
+      if (!this.showDetailsButton) {
+        this.showDetailsButton = {};
+      }
+
+      // Toggle the showDetailsButton state for the specific index
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
+
       const itemIndex = this.showIndex.indexOf(index);
       if (itemIndex === -1) {
-        this.showIndex.push(index);
+        this.showIndex.push(index);  // Push the correct index
       } else {
-        this.showIndex.splice(itemIndex, 1);
+        this.showIndex.splice(itemIndex, 1);  // Remove the correct itemIndex
       }
-      this.$set(this.showDetailsButton, index, !this.showDetailsButton[index]);
+      console.log(index);
     },
     removeTropa: () => {
       this.tropaList.splice(index, 1);
@@ -45,51 +50,105 @@ clickButtons(actionType, index) {
     }
   };
 
-  actions[actionType]?.();
-  console.log('After action:', this.showIndex, this.showDetailsButton, this.favoriteButton);
+  actions[actionType]?.(); // Call the function corresponding to actionType if it exists
 }
-----------------------------------
-data() {
-  return {
-    showIndex: [],               // List of indices for showing details
-    showDetailsButton: {},       // Dictionary to store button states per index
-    tropaList: [],               // Array of tropa items
-    favoriteButton: false        // Boolean for favorite button toggle
-  };
-}
-
-------------------------
+--------------------------------------
 clickButtons(actionType, index) {
-  console.log('Action type:', actionType, 'Index:', index);
-  console.log('Before action:', this.showIndex, this.showDetailsButton, this.favoriteButton);
-
   const actions = {
     showDetails: () => {
-      const itemIndex = this.showIndex.indexOf(index);
-      if (itemIndex === -1) {
-        this.showIndex.push(index);  // Add index if not present
-      } else {
-        this.showIndex.splice(itemIndex, 1);  // Remove index if present
+      // Initialize the showDetailsButton array if it doesn't exist
+      if (!this.showDetailsButton) {
+        this.showDetailsButton = [];
       }
 
-      // Ensure showDetailsButton[index] is initialized and reactive
-      this.$set(this.showDetailsButton, index, !this.showDetailsButton[index]);
+      // Toggle the state for the specific index
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
+
+      const itemIndex = this.showIndex.indexOf(index);
+      if (itemIndex === -1) {
+        this.showIndex.push(index);  // Push the correct index to show details
+      } else {
+        this.showIndex.splice(itemIndex, 1);  // Remove the index to hide details
+      }
+
+      console.log(index);
     },
     removeTropa: () => {
-      this.tropaList.splice(index, 1);  // Remove tropa at the specified index
+      this.tropaList.splice(index, 1);
     },
     toggleFavorite: () => {
-      this.favoriteButton = !this.favoriteButton;  // Toggle the favorite button
-      this.showIndex = index;  // Set showIndex to the current index
+      this.favoriteButton = !this.favoriteButton;
+      this.showIndex = index;
     }
   };
 
-  if (actions[actionType]) {
-    actions[actionType]();  // Execute the appropriate action
-  } else {
-    console.error('Invalid action type:', actionType);  // Log an error if actionType is invalid
-  }
+  actions[actionType]?.(); // Call the function corresponding to actionType if it exists
+}
+---------------------------------------
+clickButtons(actionType, index) {
+  const actions = {
+    showDetails: () => {
+      // Use logical OR to initialize the array and directly toggle the specific index
+      this.showDetailsButton = this.showDetailsButton || [];
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
 
-  console.log('After action:', this.showIndex, this.showDetailsButton, this.favoriteButton);
+      // Use the ternary operator to handle pushing/removing the index in the array
+      this.showIndex.includes(index) 
+        ? this.showIndex.splice(this.showIndex.indexOf(index), 1) 
+        : this.showIndex.push(index);
+
+      console.log(index);
+    },
+    removeTropa: () => {
+      this.tropaList.splice(index, 1);
+    },
+    toggleFavorite: () => {
+      this.favoriteButton = !this.favoriteButton;
+      this.showIndex = index;
+    }
+  };
+
+  actions[actionType]?.(); // Call the function corresponding to actionType if it exists
+}
+
+---------------------------
+clickButtons(actionType, index) {
+  const actions = {
+    showDetails: () => {
+      // Initialize or reference the array
+      this.showDetailsButton = this.showDetailsButton || [];
+      console.log('showDetailsButton:', this.showDetailsButton);
+
+      // Toggle the state for the specific index
+      this.showDetailsButton[index] = !this.showDetailsButton[index];
+      console.log(`Toggled showDetailsButton[${index}]:`, this.showDetailsButton[index]);
+
+      // Add or remove index in showIndex array
+      const isIndexInShowIndex = this.showIndex.includes(index);
+      console.log('Before update, showIndex:', this.showIndex);
+
+      isIndexInShowIndex 
+        ? this.showIndex.splice(this.showIndex.indexOf(index), 1) 
+        : this.showIndex.push(index);
+
+      console.log('After update, showIndex:', this.showIndex);
+      console.log('Index:', index);
+    },
+    removeTropa: () => {
+      console.log('Before removing, tropaList:', this.tropaList);
+      this.tropaList.splice(index, 1);
+      console.log('After removing, tropaList:', this.tropaList);
+    },
+    toggleFavorite: () => {
+      console.log('Before toggling, favoriteButton:', this.favoriteButton);
+      this.favoriteButton = !this.favoriteButton;
+      console.log('After toggling, favoriteButton:', this.favoriteButton);
+      this.showIndex = index;
+      console.log('showIndex set to:', index);
+    }
+  };
+
+  console.log('Action type:', actionType);
+  actions[actionType]?.(); // Call the function corresponding to actionType if it exists
 }
 
