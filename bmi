@@ -1,0 +1,180 @@
+<template>
+  <b-row class="my-1">
+    <b-col sm="1">
+      <label for="input-small">Name:</label>
+    </b-col>
+    <b-col sm="2">
+      <b-form-input v-model="person1.name" id="input-small" size="sm" placeholder="Enter your name"></b-form-input>
+    </b-col>
+    <b-col sm="1">
+      <label for="input-small">Weight:</label>
+    </b-col>
+    <b-col sm="2">
+      <b-form-input v-model="person1.weight" type="number" id="input-small" size="sm" placeholder="Enter your weight in kg"></b-form-input>
+    </b-col>
+    <b-col sm="1">
+      <label for="input-small">Height:</label>
+    </b-col>
+    <b-col sm="2">
+      <b-form-input v-model="person1.height" type="number" id="input-small" size="sm" placeholder="Enter your height in cm"></b-form-input>
+    </b-col>
+  </b-row>
+
+  <b-row class="my-1">
+    <b-col sm="1">
+      <label for="input-small">Name:</label>
+    </b-col>
+    <b-col sm="2">
+      <b-form-input v-model="person2.name" id="input-small" size="sm" placeholder="Enter your name"></b-form-input>
+    </b-col>
+    <b-col sm="1">
+      <label for="input-small">Weight:</label>
+    </b-col>
+    <b-col sm="2">
+      <b-form-input v-model="person2.weight" type="number" id="input-small" size="sm" placeholder="Enter your weight in kg"></b-form-input>
+    </b-col>
+    <b-col sm="1">
+      <label for="input-small">Height:</label>
+    </b-col>
+    <b-col sm="2">
+      <b-form-input v-model="person2.height" type="number" id="input-small" size="sm" placeholder="Enter your height in cm"></b-form-input>
+    </b-col>
+  </b-row>
+
+  <!-- Alert for missing input or BMI comparison -->
+  <b-alert v-model="showDismissibleAlert" variant="info" dismissible @dismissed="dismissAlert">
+    {{ alertMessage }}
+  </b-alert>
+
+  <!-- Button to trigger BMI calculation -->
+  <b-button @click="calculateBMI" variant="info" class="m-1">
+    Calculate
+  </b-button>
+
+  <!-- Button to compare BMIs and show alert + card -->
+  <b-button @click="compareBMI" variant="info" class="m-1">
+    Compare
+  </b-button>
+
+  <!-- Card to display BMI details, shown only when comparison is triggered -->
+  <b-card v-if="showDismissibleAlert && validInputs" class="my-2" header="BMI Comparison">
+    <b-row>
+      <b-col sm="6">
+        <b-form-group label="Person 1:">
+          <b-form-group label="Name:">
+            <b-form-input v-model="person1.name" readonly></b-form-input>
+          </b-form-group>
+          <b-form-group label="BMI:">
+            <b-form-input :value="bmi1.toFixed(2)" readonly></b-form-input>
+          </b-form-group>
+          <b-form-group label="Category:">
+            <b-form-input :value="bmiCategory1" readonly></b-form-input>
+          </b-form-group>
+        </b-form-group>
+      </b-col>
+      <b-col sm="6">
+        <b-form-group label="Person 2:">
+          <b-form-group label="Name:">
+            <b-form-input v-model="person2.name" readonly></b-form-input>
+          </b-form-group>
+          <b-form-group label="BMI:">
+            <b-form-input :value="bmi2.toFixed(2)" readonly></b-form-input>
+          </b-form-group>
+          <b-form-group label="Category:">
+            <b-form-input :value="bmiCategory2" readonly></b-form-input>
+          </b-form-group>
+        </b-form-group>
+      </b-col>
+    </b-row>
+  </b-card>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      showDismissibleAlert: false,
+      validInputs: false,
+      alertMessage: '',
+      person1: {
+        name: '',
+        weight: null,
+        height: null,
+      },
+      person2: {
+        name: '',
+        weight: null,
+        height: null,
+      },
+      bmi1: 0,
+      bmi2: 0,
+      bmiCategory1: '',
+      bmiCategory2: '',
+    };
+  },
+  methods: {
+    validateInputs() {
+      // Check if all fields are filled
+      if (
+        !this.person1.name ||
+        !this.person1.weight ||
+        !this.person1.height ||
+        !this.person2.name ||
+        !this.person2.weight ||
+        !this.person2.height
+      ) {
+        this.alertMessage = 'All fields must be filled for both persons.';
+        this.showDismissibleAlert = true;
+        return false;
+      }
+      return true;
+    },
+    calculateBMI() {
+      // Validate inputs first
+      if (!this.validateInputs()) return;
+
+      this.validInputs = true;
+
+      this.bmi1 = this.person1.weight / Math.pow(this.person1.height / 100, 2);
+      this.bmi2 = this.person2.weight / Math.pow(this.person2.height / 100, 2);
+      this.bmiCategory1 = this.getBMICategory(this.bmi1);
+      this.bmiCategory2 = this.getBMICategory(this.bmi2);
+
+      console.log(`BMI of ${this.person1.name}: ${this.bmi1.toFixed(2)}`);
+      console.log(`BMI of ${this.person2.name}: ${this.bmi2.toFixed(2)}`);
+    },
+    compareBMI() {
+      // Validate inputs first
+      if (!this.validateInputs()) return;
+
+      this.calculateBMI();
+
+      // Determine which person has the greater BMI
+      if (this.bmi1 > this.bmi2) {
+        this.alertMessage = `${this.person1.name} has a greater BMI of ${this.bmi1.toFixed(2)}`;
+      } else if (this.bmi2 > this.bmi1) {
+        this.alertMessage = `${this.person2.name} has a greater BMI of ${this.bmi2.toFixed(2)}`;
+      } else {
+        this.alertMessage = `${this.person1.name} and ${this.person2.name} have the same BMI of ${this.bmi1.toFixed(2)}`;
+      }
+
+      // Show the alert and the card with BMI details
+      this.showDismissibleAlert = true;
+    },
+    dismissAlert() {
+      this.showDismissibleAlert = false;  // This will hide both the alert and the card
+    },
+    getBMICategory(bmi) {
+      if (bmi < 18.5) {
+        return 'Underweight';
+      } else if (bmi >= 18.5 && bmi < 24.9) {
+        return 'Normal weight';
+      } else if (bmi >= 25 && bmi < 29.9) {
+        return 'Overweight';
+      } else {
+        return 'Obesity';
+      }
+    },
+  },
+};
+</script>
