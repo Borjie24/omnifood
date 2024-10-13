@@ -1,0 +1,102 @@
+<template>
+  <div id="app" class="container">
+    <h1 class="my-4">Todo List</h1>
+
+    <!-- Error Alert -->
+    <b-alert
+      variant="danger"
+      show
+      v-if="showError"
+      dismissible
+      @dismissed="showError = false"
+      class="mb-3"
+    >
+      Task cannot be empty or consist only of spaces!
+    </b-alert>
+
+    <!-- Input and Add Task Button -->
+    <b-form-group label="Add a task" label-for="task-input">
+      <b-input-group>
+        <b-form-input
+          id="task-input"
+          v-model="newTask"
+          placeholder="Enter a task"
+          @keyup.enter="addTask"
+        ></b-form-input>
+        <b-input-group-append>
+          <b-button variant="primary" @click="addTask">Add Task</b-button>
+        </b-input-group-append>
+      </b-input-group>
+    </b-form-group>
+
+    <!-- Task List -->
+    <b-list-group class="mb-3">
+      <b-list-group-item
+        v-for="(task, index) in tasks"
+        :key="index"
+        class="d-flex justify-content-between align-items-center"
+      >
+        <div>
+          <b-form-checkbox v-model="task.completed" class="mr-3"></b-form-checkbox>
+          <span :class="{ 'text-decoration-line-through': task.completed }">
+            {{ task.text }}
+          </span>
+        </div>
+        <b-button variant="danger" size="sm" @click="deleteTask(index)">Delete</b-button>
+      </b-list-group-item>
+    </b-list-group>
+
+    <!-- Action Buttons -->
+    <b-button variant="secondary" class="mr-2" @click="clearCompleted">Clear Completed</b-button>
+    <b-button variant="danger" class="mr-2" @click="clearAll">Clear All</b-button>
+    <b-button variant="info" @click="showFaqModal = true">FAQs</b-button>
+
+    <!-- FAQ Modal -->
+    <b-modal v-model="showFaqModal" title="FAQs" hide-footer>
+      <p class="mb-0">To add a task, type in the input field and press Enter or click "Add Task".</p>
+      <p class="mb-0">Check a task to mark it as completed.</p>
+      <p class="mb-0">Use "Clear Completed" to remove only completed tasks.</p>
+      <p class="mb-0">Use "Clear All" to remove all tasks.</p>
+    </b-modal>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      newTask: '',
+      tasks: [],
+      showError: false, // Error alert control
+      showFaqModal: false // FAQ modal control
+    };
+  },
+  methods: {
+    addTask() {
+      // Check if task is empty or whitespace only
+      if (this.newTask.trim() === '') {
+        this.showError = true; // Show the error alert
+      } else {
+        this.tasks.push({ text: this.newTask, completed: false });
+        this.newTask = '';
+        this.showError = false; // Hide error once a valid task is added
+      }
+    },
+    deleteTask(index) {
+      this.tasks.splice(index, 1);
+    },
+    clearCompleted() {
+      this.tasks = this.tasks.filter(task => !task.completed);
+    },
+    clearAll() {
+      this.tasks = [];
+    }
+  }
+};
+</script>
+
+<style>
+.text-decoration-line-through {
+  text-decoration: line-through;
+}
+</style>
