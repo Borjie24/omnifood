@@ -200,3 +200,20 @@ export default {
   },
 };
 </script>
+
+
+
+----------------------
+this.alertMessage = this.getBMIMessage(this.person1.name, bmi1, this.person2.name, bmi2);
+
+  this.showDismissibleAlert = true;
+},
+
+getBMIMessage(name1, bmi1, name2, bmi2) {
+  if (bmi1 > bmi2) {
+    return `${name1} has a greater BMI of ${bmi1}`;
+  } else if (bmi2 > bmi1) {
+    return `${name2} has a greater BMI of ${bmi2}`;
+  } else {
+    return `${name1} and ${name2} have the same BMI of ${bmi1}`;
+  }
