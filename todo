@@ -100,3 +100,56 @@ export default {
   text-decoration: line-through;
 }
 </style>
+
+
+
+<template>
+  <!-- FAQ Modal -->
+  <div v-model="showFaqModal" title="FAQs" hide-footer>
+    <ol>
+      <li v-for="(faq, index) in faqs" :key="index">
+        <!-- Use Object.values to iterate over the faq -->
+        <div v-for="(value, i) in Object.values(faq)" :key="i">
+          <!-- Display question in <ol> -->
+          <template v-if="i === 0">
+            <p class="font-weight-bold">{{ value }}</p>
+          </template>
+          <!-- Display answer in <ul> -->
+    
+            <ul v-else>
+              <li>{{ value }}</li>
+            </ul>
+   
+        </div>
+      </li>
+    </ol>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      showFaqModal: false,
+      faqs: [
+        { 
+          question: 'How do I add a task?', 
+          answer: 'To add a task, type in the input field and press Enter or click "Add Task".' 
+        },
+        { 
+          question: 'How do I mark a task as completed?', 
+          answer: 'Click a task to mark it as completed.' 
+        },
+        { 
+          question: 'How do I clear completed tasks?', 
+          answer: 'Use "Clear Completed" to remove only completed tasks.' 
+        },
+        { 
+          question: 'How do I clear all tasks?', 
+          answer: 'Use "Clear All" to remove all tasks.' 
+        }
+      ]
+    };
+  }
+};
+</script>
