@@ -1,0 +1,55 @@
+<template>
+  <b-container>
+    <b-card>
+      <!-- Navigation Tabs -->
+      <b-nav pills>
+        <b-nav-item 
+          :active="activeTab === 'one'" 
+          @click="setActiveTab('one')">
+          One
+        </b-nav-item>
+        <b-nav-item 
+          :active="activeTab === 'two'" 
+          @click="setActiveTab('two')">
+          Two
+        </b-nav-item>
+        <b-nav-item 
+          :active="activeTab === 'three'" 
+          @click="setActiveTab('three')">
+          Three
+        </b-nav-item>
+      </b-nav>
+
+      <!-- Conditional Card Content -->
+      <b-card-text v-if="activeTab === 'one'">
+        This is the content for Tab One.
+      </b-card-text>
+      <b-card-text v-if="activeTab === 'two'">
+        This is the content for Tab Two.
+      </b-card-text>
+      <b-card-text v-if="activeTab === 'three'">
+        This is the content for Tab Three.
+      </b-card-text>
+    </b-card>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      activeTab: 'one', 
+    }
+  },
+  methods: {
+    setActiveTab(tab) {
+      this.activeTab = tab;
+    },
+  },
+};
+</script>
+
+<style scoped>
+/* Optional: Add any specific styling here */
+</style>
+
