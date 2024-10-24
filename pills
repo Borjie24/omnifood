@@ -53,3 +53,74 @@ export default {
 /* Optional: Add any specific styling here */
 </style>
 
+
+-------------
+
+<template>
+  <b-container>
+    <b-card>
+      <!-- Navigation Tabs for Filtering -->
+      <b-nav pills>
+        <b-nav-item 
+          :active="filterType === 'all'" 
+          @click="setFilter('all')">
+          All
+        </b-nav-item>
+        <b-nav-item 
+          :active="filterType === 'deposit'" 
+          @click="setFilter('deposit')">
+          Deposit
+        </b-nav-item>
+        <b-nav-item 
+          :active="filterType === 'withdrawal'" 
+          @click="setFilter('withdrawal')">
+          Withdrawal
+        </b-nav-item>
+      </b-nav>
+
+      <!-- Transaction List -->
+      <b-list-group>
+        <b-list-group-item 
+          v-for="transaction in filteredTransactions" 
+          :key="transaction.id">
+          {{ transaction.type }}: {{ transaction.amount }}
+        </b-list-group-item>
+      </b-list-group>
+    </b-card>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      filterType: 'all', 
+      transactions: [
+        { id: 1, type: 'deposit', amount: 100 },
+        { id: 2, type: 'withdrawal', amount: 50 },
+        { id: 3, type: 'deposit', amount: 200 },
+        { id: 4, type: 'withdrawal', amount: 30 },
+       
+      ],
+    };
+  },
+  computed: {
+    filteredTransactions() {
+      if (this.filterType === 'all') {
+        return this.transactions;
+      }
+      return this.transactions.filter(transaction => transaction.type === this.filterType);
+    },
+  },
+  methods: {
+    setFilter(type) {
+      this.filterType = type;
+    },
+  },
+};
+</script>
+
+<style scoped>
+/* Optional: Add any specific styling here */
+</style>
+
