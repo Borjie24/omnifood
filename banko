@@ -747,10 +747,10 @@ export default {
 }
 
 .movements__row {
-  padding: 2rem 2rem;
+  padding: 2rem 1rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   flex-wrap: wrap;
   border-bottom: 1px solid #56cfe1;
 }
