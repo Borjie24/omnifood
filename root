@@ -1,0 +1,9 @@
+:root {
+  --color-brand--1: #ff4b4b;
+  --color-brand--2: #4b6cff;
+  --color-dark--1: #1c3f3f; /* dark forest green */
+  --color-dark--2: #2b5b5b; /* medium dark green */
+  --color-light--1: #a1d1d1; /* soft mint green */
+  --color-light--2: #e4f8e4; /* very light green, almost white */
+  --color-light--3: #c1e6c1; /* gentle pale green */
+}
