@@ -23,6 +23,26 @@ describe('YourComponent.vue', () => {
     expect(wrapper.vm.addToFriendList).toBe(null);
   });
 });
+
+import { shallowMount } from '@vue/test-utils';
+import YourComponent from '@/path/to/YourComponent.vue';
+
+describe('YourComponent', () => {
+  it('provides tropaList', () => {
+    const wrapper = shallowMount(YourComponent, {
+      data() {
+        return {
+          tropaList: ['Item 1', 'Item 2']
+        }
+      }
+    });
+
+    const provided = wrapper.vm.$options.provide.call(wrapper.vm);
+    expect(provided.tropaList).toEqual(wrapper.vm.tropaList);
+  });
+});
+
+
 -----------------
 
 // SlamBook.spec.js
