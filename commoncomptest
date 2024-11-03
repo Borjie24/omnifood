@@ -33,3 +33,66 @@ describe('CommonButton.vue', () => {
   })
 })
 --------------------------------------------
+import { shallowMount } from '@vue/test-utils'
+import CommonTextInput from '@/components/CommonTextInput.vue'
+
+describe('CommonTextInput.vue', () => {
+  let wrapper;
+
+  const mockInput = {
+    data: { saveAs: 'testKey' },
+    directives: { type: 'text' }
+  }
+
+  beforeEach(() => {
+    wrapper = shallowMount(CommonTextInput, {
+      propsData: { input: mockInput }
+    })
+  })
+
+  afterEach(() => {
+    wrapper.destroy()
+  })
+
+  test('receives the correct prop structure', () => {
+    expect(wrapper.props().input).toEqual(mockInput)
+  })
+
+  test('emits correct value on input change', async () => {
+    const testValue = 'Hello World'
+    await wrapper.setData({ textInputData: testValue })
+    wrapper.vm.emitValue()
+    
+    expect(wrapper.emitted().formData).toBeTruthy()
+    expect(wrapper.emitted().formData[0][0]).toEqual({
+      key: mockInput.data.saveAs,
+      value: testValue.trim()
+    })
+  })
+
+  test('prevents invalid characters based on type and saveAs values', () => {
+    const mockEvent = (key) => ({ key, preventDefault: jest.fn() })
+
+    wrapper.vm.checkIfKeyIsValid(mockEvent('1'), 'text', 'testKey')
+    expect(mockEvent('1').preventDefault).toHaveBeenCalled()
+
+    wrapper.vm.checkIfKeyIsValid(mockEvent('a'), 'number', 'age')
+    expect(mockEvent('a').preventDefault).toHaveBeenCalled()
+
+    wrapper.vm.checkIfKeyIsValid(mockEvent('.'), 'number', 'height')
+    expect(mockEvent('.').preventDefault).not.toHaveBeenCalled()
+
+    wrapper.vm.checkIfKeyIsValid(mockEvent(' '), 'text', 'testKey')
+    expect(mockEvent(' ').preventDefault).toHaveBeenCalled()
+  })
+
+  test('textInput function returns true if input matches regex', () => {
+    const regexText = /^[a-zA-Z]+$/
+    const regexNumber = /^[0-9]+$/
+    
+    expect(wrapper.vm.textInput(regexText, 'abc')).toBe(true)
+    expect(wrapper.vm.textInput(regexText, '123')).toBe(false)
+    expect(wrapper.vm.textInput(regexNumber, '123')).toBe(true)
+    expect(wrapper.vm.textInput(regexNumber, 'abc')).toBe(false)
+  })
+})
