@@ -1,0 +1,46 @@
+<template>
+  <b-container fluid class="mt-5">
+    <b-row class="justify-content-center">
+      <b-col
+        sm="6"
+        md="4"
+        lg="3"
+        v-for="(title, index) in titles"
+        :key="index"
+        class="d-flex justify-content-center"
+      >
+        <b-card
+          class="mb-3 text-white"
+          img-src="https://images.unsplash.com/photo-1482877346909-048fb6477632?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=958&q=80"
+          img-alt="article-cover"
+          img-top
+          overlay
+          style="max-width: 300px"
+          :title="title"
+        >
+          <!-- 958 x 1341 -->
+          <b-card-text> {{ title }} content goes here. </b-card-text>
+        </b-card>
+      </b-col>
+    </b-row>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      titles: [
+        'Slambook',
+        'Monster Slayer',
+        'BMI Comparison',
+        'Todo',
+        'Bankist',
+        'Mapty',
+      ],
+    }
+  },
+}
+</script>
+
+<style scoped></style>
