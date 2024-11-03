@@ -26,3 +26,141 @@ describe('TropaComponent', () => {
   });
 });
 ---------------------------
+import { shallowMount } from '@vue/test-utils';
+import YourComponent from '@/path/to/YourComponent.vue'; // Adjust the path as necessary
+
+describe('YourComponent.vue', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallowMount(YourComponent);
+    // Add a sample `tropa` to the component data for testing
+    wrapper.setData({
+      tropaList: [
+        { name: 'Tropa 1', favoriteButton: false },
+        { name: 'Tropa 2', favoriteButton: false },
+      ],
+    });
+  });
+
+  it('toggles the favoriteButton of a given tropa', () => {
+    const tropaIndex = 0;
+    const tropa = wrapper.vm.tropaList[tropaIndex];
+
+    // Initial state
+    expect(tropa.favoriteButton).toBe(false);
+
+    // Call showFavorites method
+    wrapper.vm.showFavorites(tropaIndex, tropa);
+
+    // Verify the favoriteButton is now true
+    expect(tropa.favoriteButton).toBe(true);
+
+    // Call showFavorites method again to toggle back
+    wrapper.vm.showFavorites(tropaIndex, tropa);
+
+    // Verify the favoriteButton is now false again
+    expect(tropa.favoriteButton).toBe(false);
+  });
+});
+
+---------------------------
+// deleteFriends.test.js
+import { shallowMount } from '@vue/test-utils';
+import YourComponent from '@/path/to/YourComponent.vue'; // Adjust the import according to your file structure
+
+describe('deleteFriends', () => {
+  let wrapper;
+  let instance;
+
+  beforeEach(() => {
+    wrapper = shallowMount(YourComponent);
+    instance = wrapper.vm;
+
+    // Mocking the tropaList for testing
+    instance.tropaList = [{ name: 'Tropa 1' }, { name: 'Tropa 2' }, { name: 'Tropa 3' }];
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should remove the specified Tropa when confirmation is accepted', () => {
+    // Mock the confirm function to return true
+    global.confirm = jest.fn(() => true);
+
+    // Call the method to delete the first Tropa
+    instance.deleteFriends(0);
+
+    // Check if the Tropa was removed
+    expect(instance.tropaList.length).toBe(2);
+    expect(instance.tropaList).not.toContainEqual({ name: 'Tropa 1' });
+  });
+
+  it('should not remove the Tropa when confirmation is declined', () => {
+    // Mock the confirm function to return false
+    global.confirm = jest.fn(() => false);
+
+    // Call the method to delete the first Tropa
+    instance.deleteFriends(0);
+
+    // Check if the Tropa list remains the same
+    expect(instance.tropaList.length).toBe(3);
+    expect(instance.tropaList).toContainEqual({ name: 'Tropa 1' });
+  });
+});
+
+------------------------------
+
+import { mount } from '@vue/test-utils';
+import YourComponent from '@/path/to/YourComponent.vue';
+
+describe('YourComponent.vue', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = mount(YourComponent);
+  });
+
+  it('toggles showDetailsButton for a specific tropa', () => {
+    const index = 0; // Change to the index you want to test
+    const tropa = wrapper.vm.tropaList[index];
+
+    // Initial state should be false
+    expect(tropa.showDetailsButton).toBe(false);
+
+    // Call the method with the specific tropa
+    wrapper.vm.showDetails(index, tropa);
+
+    // Check if it toggled to true
+    expect(tropa.showDetailsButton).toBe(true);
+
+    // Call the method again to toggle back
+    wrapper.vm.showDetails(index, tropa);
+
+    // Check if it toggled back to false
+    expect(tropa.showDetailsButton).toBe(false);
+  });
+
+  it('toggles showDetailsButton for a specific index when tropa is null', () => {
+    const index = 1; // Change to the index you want to test
+    const tropa = wrapper.vm.tropaList[index];
+
+    // Initial state should be false
+    expect(tropa.showDetailsButton).toBe(false);
+
+    // Call the method without the tropa parameter
+    wrapper.vm.showDetails(index);
+
+    // Check if it toggled to true
+    expect(tropa.showDetailsButton).toBe(true);
+
+    // Call the method again to toggle back
+    wrapper.vm.showDetails(index);
+
+    // Check if it toggled back to false
+    expect(tropa.showDetailsButton).toBe(false);
+  });
+});
+
+
