@@ -1,0 +1,72 @@
+<template>
+  <div>
+    <b-form-input
+      v-model="textInputData"
+      v-bind="input.directives"
+      @change="emitValue"
+      @keypress="checkIfKeyIsValid($event)"
+      trim
+      required
+    >
+    </b-form-input>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'CommonTextInput',
+  /**
+   * Receives data object and properties from the parent component.
+   * @description
+   * - `data`: holds key and value for the input field.
+   * - `directives`: contains styling or attributes for the input.
+   */
+  props: {
+    input: { data: Object, type: Object, required: true }
+  },
+  data() {
+    return {
+      textInputData: ''
+    }
+  },
+  methods: {
+    /**
+     * Emits the trimmed input data to the parent component.
+     */
+    emitValue() {
+      return this.$emit('formData', {
+        key: this.input.data.saveAs,
+        value: this.textInputData.trim()
+      })
+    },
+    /**
+     * Validates input against regex based on `type` and `saveAs`.
+     * Prevents invalid characters from being entered.
+     */
+    checkIfKeyIsValid(event) {
+      const { type } = this.input.directives;
+      const { saveAs } = this.input.data;
+
+      // Define regex patterns based on type and saveAs
+      const regexPatterns = {
+        text: /^[a-zA-Z]+$/,
+        number: saveAs === 'age' ? /^[0-9]+$/ : /^[0-9.]+$/,
+        tel: /^[0-9]+$/
+      };
+
+      const regex = regexPatterns[type];
+
+      // Prevent default if input doesn't match the regex
+      if (regex && !this.textInput(regex, event.key)) {
+        event.preventDefault();
+      }
+    },
+    /**
+     * Tests if the input follows the regex pattern.
+     */
+    textInput(regex, input) {
+      return regex.test(input);
+    }
+  }
+}
+</script>
