@@ -1,0 +1,28 @@
+import { mount } from '@vue/test-utils';
+import TropaComponent from '@/components/TropaComponent.vue'; // Adjust the path as necessary
+
+describe('TropaComponent', () => {
+  it('should inject tropaList correctly', () => {
+    // Arrange: Set up a mock for the injected property
+    const mockTropaList = [
+      { id: 1, name: 'Tropa 1' },
+      { id: 2, name: 'Tropa 2' },
+    ];
+
+    // Provide the mock value when mounting the component
+    const wrapper = mount(TropaComponent, {
+      provide: {
+        tropaList: mockTropaList,
+      },
+    });
+
+    // Act: Find the list items rendered by the component
+    const listItems = wrapper.findAll('li');
+
+    // Assert: Verify the correct items are displayed
+    expect(listItems.length).toBe(mockTropaList.length);
+    expect(listItems[0].text()).toBe(mockTropaList[0].name);
+    expect(listItems[1].text()).toBe(mockTropaList[1].name);
+  });
+});
+---------------------------
