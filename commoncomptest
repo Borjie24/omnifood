@@ -1,0 +1,35 @@
+import { shallowMount } from '@vue/test-utils'
+import CommonButton from '@/components/CommonButton.vue'
+
+describe('CommonButton.vue', () => {
+  const inputProp = {
+    directives: { type: 'primary', disabled: false },
+    event: { actionType: 'testAction' }
+  }
+
+  test('renders correctly with props', () => {
+    const wrapper = shallowMount(CommonButton, {
+      propsData: { input: inputProp }
+    })
+
+    // Check if input prop was passed correctly
+    expect(wrapper.props().input).toEqual(inputProp)
+
+    // Check if button has the correct type directive
+    expect(wrapper.find('b-button').attributes().type).toBe(inputProp.directives.type)
+  })
+
+  test('emits the correct action event when clicked', async () => {
+    const wrapper = shallowMount(CommonButton, {
+      propsData: { input: inputProp }
+    })
+
+    // Trigger the click event
+    await wrapper.find('b-button').trigger('click')
+
+    // Check if the 'action' event is emitted with the correct payload
+    expect(wrapper.emitted().action).toBeTruthy()
+    expect(wrapper.emitted().action[0]).toEqual([inputProp.event.actionType])
+  })
+})
+--------------------------------------------
