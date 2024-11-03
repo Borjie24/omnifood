@@ -1,0 +1,187 @@
+import { shallowMount } from '@vue/test-utils'
+import RegistrationForm from '@/components/RegistrationForm.vue'
+
+describe('RegistrationForm.vue', () => {
+  let wrapper
+
+  beforeEach(() => {
+    wrapper = shallowMount(RegistrationForm, {
+      provide: {
+        tropaList: []
+      }
+    })
+  })
+
+  afterEach(() => {
+    wrapper.destroy()
+  })
+
+  test('addFormData updates inputData with the correct key and value', () => {
+    wrapper.vm.addFormData({ key: 'nickname', value: 'TropaUser' })
+    expect(wrapper.vm.inputData.nickname).toBe('TropaUser')
+  })
+
+  test('resetInput resets inputData and increments itemKey', () => {
+    wrapper.setData({
+      inputData: { nickname: 'TropaUser' },
+      itemKey: 1
+    })
+    wrapper.vm.resetInput()
+    expect(wrapper.vm.inputData).toEqual(JSON.parse(JSON.stringify(wrapper.vm.INPUTDATA_PROPERTIES)))
+    expect(wrapper.vm.itemKey).toBe(2)
+  })
+
+  test('formValidity returns false and shows no error if inputData is valid', () => {
+    wrapper.setData({
+      inputData: {
+        nickname: 'User',
+        fullname: 'Full User',
+        email: 'user@example.com',
+        zodiacSign: 'Gemini',
+        loveLanguage: ['Words', 'Touch', 'Gifts'],
+        motto: 'Always be kind'
+      }
+    })
+    const result = wrapper.vm.formValidity()
+    expect(result).toBe(false)
+    expect(wrapper.vm.isError).toBe(false)
+  })
+
+  test('formValidity returns true and shows error for invalid nickname', () => {
+    wrapper.setData({
+      inputData: {
+        nickname: 'User 123', // Invalid input with whitespace and numbers
+        fullname: 'Full User',
+        email: 'user@example.com',
+        zodiacSign: 'Gemini',
+        loveLanguage: ['Words', 'Touch', 'Gifts'],
+        motto: 'Always be kind'
+      }
+    })
+    const result = wrapper.vm.formValidity()
+    expect(result).toBe(true)
+    expect(wrapper.vm.isError).toBe(true)
+  })
+
+  test('submitInputData adds new Tropa to tropaList and resets inputData if valid', () => {
+    const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {})
+    const tropaList = []
+    wrapper.setData({
+      inputData: {
+        nickname: 'User',
+        fullname: 'Full User',
+        email: 'user@example.com',
+        zodiacSign: 'Gemini',
+        loveLanguage: ['Words', 'Touch', 'Gifts'],
+        motto: 'Always be kind'
+      },
+      tropaList
+    })
+    wrapper.vm.submitInputData()
+
+    expect(mockAlert).toHaveBeenCalledWith('New Tropa has been added')
+    expect(tropaList.length).toBe(1)
+    expect(tropaList[0].pantropa.nickname).toBe('User')
+    expect(wrapper.vm.inputData).toEqual(JSON.parse(JSON.stringify(wrapper.vm.INPUTDATA_PROPERTIES)))
+    mockAlert.mockRestore()
+  })
+})
+
+---------------------------------
+
+import { shallowMount } from '@vue/test-utils'
+import RegistrationForm from '@/components/RegistrationForm.vue'
+
+describe('RegistrationForm.vue', () => {
+  let wrapper
+
+  beforeEach(() => {
+    wrapper = shallowMount(RegistrationForm, {
+      provide: {
+        tropaList: []
+      }
+    })
+  })
+
+  afterEach(() => {
+    wrapper.destroy()
+  })
+
+  describe('addFormData', () => {
+    test('updates inputData with the correct key and value', () => {
+      wrapper.vm.addFormData({ key: 'nickname', value: 'TropaUser' })
+      expect(wrapper.vm.inputData.nickname).toBe('TropaUser')
+    })
+  })
+
+  describe('resetInput', () => {
+    test('resets inputData and increments itemKey', () => {
+      wrapper.setData({
+        inputData: { nickname: 'TropaUser' },
+        itemKey: 1
+      })
+      wrapper.vm.resetInput()
+      expect(wrapper.vm.inputData).toEqual(JSON.parse(JSON.stringify(wrapper.vm.INPUTDATA_PROPERTIES)))
+      expect(wrapper.vm.itemKey).toBe(2)
+    })
+  })
+
+  describe('formValidity', () => {
+    test('returns false and shows no error if inputData is valid', () => {
+      wrapper.setData({
+        inputData: {
+          nickname: 'User',
+          fullname: 'Full User',
+          email: 'user@example.com',
+          zodiacSign: 'Gemini',
+          loveLanguage: ['Words', 'Touch', 'Gifts'],
+          motto: 'Always be kind'
+        }
+      })
+      const result = wrapper.vm.formValidity()
+      expect(result).toBe(false)
+      expect(wrapper.vm.isError).toBe(false)
+    })
+
+    test('returns true and shows error for invalid nickname', () => {
+      wrapper.setData({
+        inputData: {
+          nickname: 'User 123', // Invalid input with whitespace and numbers
+          fullname: 'Full User',
+          email: 'user@example.com',
+          zodiacSign: 'Gemini',
+          loveLanguage: ['Words', 'Touch', 'Gifts'],
+          motto: 'Always be kind'
+        }
+      })
+      const result = wrapper.vm.formValidity()
+      expect(result).toBe(true)
+      expect(wrapper.vm.isError).toBe(true)
+    })
+  })
+
+  describe('submitInputData', () => {
+    test('adds new Tropa to tropaList and resets inputData if valid', () => {
+      const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {})
+      const tropaList = []
+      wrapper.setData({
+        inputData: {
+          nickname: 'User',
+          fullname: 'Full User',
+          email: 'user@example.com',
+          zodiacSign: 'Gemini',
+          loveLanguage: ['Words', 'Touch', 'Gifts'],
+          motto: 'Always be kind'
+        },
+        tropaList
+      })
+      wrapper.vm.submitInputData()
+
+      expect(mockAlert).toHaveBeenCalledWith('New Tropa has been added')
+      expect(tropaList.length).toBe(1)
+      expect(tropaList[0].pantropa.nickname).toBe('User')
+      expect(wrapper.vm.inputData).toEqual(JSON.parse(JSON.stringify(wrapper.vm.INPUTDATA_PROPERTIES)))
+      mockAlert.mockRestore()
+    })
+  })
+})
