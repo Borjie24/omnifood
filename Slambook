@@ -1,0 +1,66 @@
+import { shallowMount } from '@vue/test-utils';
+import YourComponent from '@/path/to/YourComponent.vue'; // Adjust the path accordingly
+
+describe('YourComponent.vue', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallowMount(YourComponent);
+  });
+
+  it('sets addToFriendList to true when actionType is "addFriend"', () => {
+    wrapper.vm.switchAddToListofFriend('addFriend');
+    expect(wrapper.vm.addToFriendList).toBe(true);
+  });
+
+  it('sets addToFriendList to false when actionType is "openFriendList"', () => {
+    wrapper.vm.switchAddToListofFriend('openFriendList');
+    expect(wrapper.vm.addToFriendList).toBe(false);
+  });
+
+  it('sets addToFriendList to null when actionType is invalid', () => {
+    wrapper.vm.switchAddToListofFriend('invalidAction');
+    expect(wrapper.vm.addToFriendList).toBe(null);
+  });
+});
+-----------------
+
+// SlamBook.spec.js
+import { shallowMount } from '@vue/test-utils'
+import SlamBook from '@/components/pages/Slambook/SlamBook.vue'
+import RegistrationForm from '@/components/pages/Slambook/RegistrationForm.vue'
+import SlamBookFriendList from '@/components/pages/Slambook/SlamBookFriendList.vue'
+
+describe('SlamBook.vue', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallowMount(SlamBook);
+  });
+
+  it('renders RegistrationForm when addToFriendList is true', async () => {
+    wrapper.setData({ addToFriendList: true });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent(RegistrationForm).exists()).toBe(true);
+    expect(wrapper.findComponent(SlamBookFriendList).exists()).toBe(false);
+  });
+
+  it('renders SlamBookFriendList when addToFriendList is false', async () => {
+    wrapper.setData({ addToFriendList: false });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent(SlamBookFriendList).exists()).toBe(true);
+    expect(wrapper.findComponent(RegistrationForm).exists()).toBe(false);
+  });
+
+  it('switches to add friend form on button click', async () => {
+    const actionType = 'addFriend';
+    await wrapper.vm.switchAddToListofFriend(actionType);
+    expect(wrapper.vm.addToFriendList).toBe(true);
+  });
+
+  it('switches to friend list on button click', async () => {
+    const actionType = 'openFriendList';
+    await wrapper.vm.switchAddToListofFriend(actionType);
+    expect(wrapper.vm.addToFriendList).toBe(false);
+  });
+});
