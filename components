@@ -1,0 +1,276 @@
+import { shallowMount } from '@vue/test-utils'
+import CommonButton from '@/components/CommonButton.vue'
+
+describe('CommonButton.vue', () => {
+  it('emits action event with actionType when clicked', () => {
+    const input = {
+      directives: { type: 'button' },
+      event: { actionType: 'testAction' }
+    }
+    
+    const wrapper = shallowMount(CommonButton, {
+      propsData: { input }
+    })
+    
+    wrapper.find('button').trigger('click')
+    
+    expect(wrapper.emitted().action[0]).toEqual(['testAction'])
+  })
+})
+
+-----
+
+  import { shallowMount } from '@vue/test-utils'
+import CommonCheckBox from '@/components/CommonCheckBox.vue'
+
+describe('CommonCheckBox.vue', () => {
+  it('emits formData event with selected values when changed', async () => {
+    const input = {
+      data: { saveAs: 'selectedOptions' },
+      display: { options: [{ text: 'Option 1', value: '1' }, { text: 'Option 2', value: '2' }] },
+      directives: { class: 'custom-class' }
+    }
+
+    const wrapper = shallowMount(CommonCheckBox, {
+      propsData: { input }
+    })
+
+    // Simulate selecting checkboxes
+    wrapper.setData({ selected: ['1', '2'] })
+    await wrapper.vm.$nextTick()
+    
+    wrapper.findComponent({ ref: 'checkboxGroup' }).vm.$emit('change')
+
+    expect(wrapper.emitted().formData[0]).toEqual([{ key: 'selectedOptions', value: ['1', '2'] }])
+  })
+})
+
+-----
+
+  import { shallowMount } from '@vue/test-utils'
+import CommonDropdown from '@/components/CommonDropdown.vue'
+
+describe('CommonDropdown.vue', () => {
+  it('emits formData event with selected value when changed', async () => {
+    const input = {
+      data: { saveAs: 'selectedOption' },
+      display: { options: [{ text: 'Option 1', value: '1' }, { text: 'Option 2', value: '2' }] },
+      directives: { class: 'custom-class' }
+    }
+
+    const wrapper = shallowMount(CommonDropdown, {
+      propsData: { input }
+    })
+
+    // Simulate selecting a dropdown option
+    wrapper.setData({ value: '1' })
+    await wrapper.vm.$nextTick()
+
+    wrapper.find('select').trigger('change')
+
+    expect(wrapper.emitted().formData[0]).toEqual([{ key: 'selectedOption', value: '1' }])
+  })
+})
+
+
+  ------
+
+  import { shallowMount } from '@vue/test-utils'
+import CommonLabel from '@/components/CommonLabel.vue'
+
+describe('CommonLabel.vue', () => {
+  it('renders label with correct text and directives', () => {
+    const input = {
+      directives: { class: 'custom-label' },
+      display: { label: 'Test Label' }
+    }
+
+    const wrapper = shallowMount(CommonLabel, {
+      propsData: { input }
+    })
+
+    const label = wrapper.find('label')
+    expect(label.text()).toBe('Test Label')
+    expect(label.classes()).toContain('custom-label')
+  })
+})
+
+
+--------
+
+  import { shallowMount } from '@vue/test-utils'
+import CommonNavItem from '@/components/CommonNavItem.vue'
+
+describe('CommonNavItem.vue', () => {
+  it('renders nav item with correct text and icon', () => {
+    const input = {
+      directives: { to: '/test', class: 'nav-link' },
+      display: { icon: 'test-icon', text: 'Test Item' }
+    }
+
+    const wrapper = shallowMount(CommonNavItem, {
+      propsData: { input }
+    })
+
+    const navItem = wrapper.find('b-nav-item')
+    const link = wrapper.find('router-link')
+
+    expect(link.attributes().to).toBe('/test')
+    expect(link.classes()).toContain('nav-link')
+    expect(link.find('i').classes()).toContain('test-icon')
+    expect(link.text()).toBe('Test Item')
+  })
+})
+-------
+
+
+  import { shallowMount } from '@vue/test-utils'
+import CommonTextInput from '@/components/CommonTextInput.vue'
+
+describe('CommonTextInput.vue', () => {
+  it('emits formData event with trimmed input value when changed', async () => {
+    const input = {
+      directives: { class: 'custom-input', type: 'text' },
+      data: { saveAs: 'inputValue' }
+    }
+
+    const wrapper = shallowMount(CommonTextInput, {
+      propsData: { input }
+    })
+
+    // Simulate user input
+    wrapper.setData({ textInputData: ' Test input ' })
+    await wrapper.vm.$nextTick()
+
+    // Trigger the change event
+    wrapper.find('input').trigger('change')
+
+    expect(wrapper.emitted().formData[0]).toEqual([{ key: 'inputValue', value: 'Test input' }])
+  })
+
+  it('prevents invalid key input based on type', async () => {
+    const input = {
+      directives: { class: 'custom-input', type: 'text' },
+      data: { saveAs: 'inputValue' }
+    }
+
+    const wrapper = shallowMount(CommonTextInput, {
+      propsData: { input }
+    })
+
+    const event = new KeyboardEvent('keypress', { key: '1' })
+    wrapper.vm.checkIfKeyIsValid(event, 'text', 'inputValue')
+    expect(event.defaultPrevented).toBe(true) // prevent input for non-text character
+  })
+
+  it('allows valid text input', async () => {
+    const input = {
+      directives: { class: 'custom-input', type: 'text' },
+      data: { saveAs: 'inputValue' }
+    }
+
+    const wrapper = shallowMount(CommonTextInput, {
+      propsData: { input }
+    })
+
+    const event = new KeyboardEvent('keypress', { key: 'a' })
+    wrapper.vm.checkIfKeyIsValid(event, 'text', 'inputValue')
+    expect(event.defaultPrevented).toBe(false) // allow valid text character
+  })
+})
+------------------
+
+
+  import { shallowMount } from '@vue/test-utils'
+import CommonToDoInput from '@/components/CommonToDoInput.vue'
+
+describe('CommonToDoInput.vue', () => {
+  it('emits formData event with trimmed task text when changed', async () => {
+    const input = {
+      directives: { class: 'custom-input' },
+      data: { saveAs: 'taskDescription' }
+    }
+
+    const wrapper = shallowMount(CommonToDoInput, {
+      propsData: { input }
+    })
+
+    // Simulate user input
+    wrapper.setData({ taskText: '  Buy groceries  ' })
+    await wrapper.vm.$nextTick()
+
+    // Trigger the change event
+    wrapper.find('input').trigger('change')
+
+    expect(wrapper.emitted().formData[0]).toEqual([{ key: 'taskDescription', value: 'Buy groceries' }])
+  })
+
+  it('does not emit empty task text', async () => {
+    const input = {
+      directives: { class: 'custom-input' },
+      data: { saveAs: 'taskDescription' }
+    }
+
+    const wrapper = shallowMount(CommonToDoInput, {
+      propsData: { input }
+    })
+
+    // Simulate user input
+    wrapper.setData({ taskText: '   ' }) // Set task text to empty string after trimming
+    await wrapper.vm.$nextTick()
+
+    // Trigger the change event
+    wrapper.find('input').trigger('change')
+
+    expect(wrapper.emitted().formData).toBeUndefined() // Expect no emission if the input is empty
+  })
+})
+
+
+  -----------
+
+
+  import { shallowMount } from '@vue/test-utils'
+import CommonTextArea from '@/components/CommonTextArea.vue'
+
+describe('CommonTextArea.vue', () => {
+  it('emits formData event with input text when changed', async () => {
+    const input = {
+      directives: { class: 'custom-textarea' },
+      data: { saveAs: 'description' }
+    }
+
+    const wrapper = shallowMount(CommonTextArea, {
+      propsData: { input }
+    })
+
+    // Simulate user input
+    wrapper.setData({ textInput: 'This is a sample text.' })
+    await wrapper.vm.$nextTick()
+
+    // Trigger the change event
+    wrapper.find('textarea').trigger('change')
+
+    expect(wrapper.emitted().formData[0]).toEqual([{ key: 'description', value: 'This is a sample text.' }])
+  })
+
+  it('does not emit empty input text', async () => {
+    const input = {
+      directives: { class: 'custom-textarea' },
+      data: { saveAs: 'description' }
+    }
+
+    const wrapper = shallowMount(CommonTextArea, {
+      propsData: { input }
+    })
+
+    // Simulate user input
+    wrapper.setData({ textInput: '' }) // Set text input to empty
+    await wrapper.vm.$nextTick()
+
+    // Trigger the change event
+    wrapper.find('textarea').trigger('change')
+
+    expect(wrapper.emitted().formData).toBeUndefined() // Expect no emission if the input is empty
+  })
+})
