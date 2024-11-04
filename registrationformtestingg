@@ -1,0 +1,127 @@
+import { shallowMount } from '@vue/test-utils'
+import RegistrationForm from '@/components/pages/Slambook/RegistrationForm.vue'
+
+describe('RegistrationForm.vue', () => {
+  const tropaList = [
+    {
+      nickname: 'Sample',
+      fullname: 'Sample One',
+      age: '18',
+      birthdate: '2001-03-20',
+      email: 'sampleone@email.com',
+      phoneNumber: '09123456789',
+      zodiacSign: 'Libra',
+      drink: 'Yes',
+      smoke: 'Yes',
+      loveLanguage: ['Words of Affirmation', 'Acts of Service', 'Quality Time'],
+      motto: 'Sample Motto'
+    }
+  ]
+
+  test('addFormData updates inputData with the correct key and value', () => {
+    const wrapper = shallowMount(RegistrationForm, {
+      global: {
+        provide: { tropaList: [...tropaList] }
+      }
+    })
+
+    wrapper.vm.addFormData({ key: 'nickname', value: 'Sample' })
+    expect(wrapper.vm.inputData.nickname).toBe('Sample')
+
+    wrapper.unmount()
+  })
+
+  test('resetInput clears inputData', () => {
+    const wrapper = shallowMount(RegistrationForm, {
+      global: {
+        provide: { tropaList: [...tropaList] }
+      }
+    })
+
+    wrapper.vm.inputData.nickname = 'Sample'
+    wrapper.vm.resetInput()
+    expect(wrapper.vm.inputData.nickname).toBe('')
+
+    wrapper.unmount()
+  })
+
+  test('formValidity detects invalid nickname and sets isError to true', () => {
+    const wrapper = shallowMount(RegistrationForm, {
+      global: {
+        provide: { tropaList: [...tropaList] }
+      }
+    })
+
+    wrapper.vm.inputData.nickname = 'Invalid Nickname 123'
+    expect(wrapper.vm.formValidity()).toBe(true)
+    expect(wrapper.vm.isError).toBe(true)
+
+    wrapper.unmount()
+  })
+
+  test('formValidity detects valid inputs and sets isError to false', () => {
+    const wrapper = shallowMount(RegistrationForm, {
+      global: {
+        provide: { tropaList: [...tropaList] }
+      }
+    })
+
+    wrapper.vm.inputData.nickname = 'ValidNickname'
+    wrapper.vm.inputData.fullname = 'Valid Fullname'
+    wrapper.vm.inputData.email = 'validemail@example.com'
+    wrapper.vm.inputData.zodiacSign = 'Libra'
+    wrapper.vm.inputData.loveLanguage = ['Words of Affirmation', 'Acts of Service', 'Quality Time']
+    wrapper.vm.inputData.motto = 'Valid Motto'
+
+    expect(wrapper.vm.formValidity()).toBe(false)
+    expect(wrapper.vm.isError).toBe(false)
+
+    wrapper.unmount()
+  })
+
+  test('submitInputData pushes new data to tropaList when form is valid', () => {
+    const wrapper = shallowMount(RegistrationForm, {
+      global: {
+        provide: { tropaList: [...tropaList] }
+      }
+    })
+
+    wrapper.vm.inputData = {
+      nickname: 'NewTropa',
+      fullname: 'New Fullname',
+      age: '21',
+      birthdate: '2003-01-01',
+      email: 'newtropa@example.com',
+      phoneNumber: '09876543210',
+      zodiacSign: 'Aries',
+      drink: 'No',
+      smoke: 'No',
+      loveLanguage: ['Quality Time', 'Acts of Service', 'Physical Touch'],
+      motto: 'New Motto'
+    }
+
+    wrapper.vm.formValidity = jest.fn().mockReturnValue(false)
+    wrapper.vm.submitInputData()
+
+    expect(wrapper.vm.tropaList[0].pantropa.nickname).toBe('NewTropa')
+
+    wrapper.unmount()
+  })
+
+  test('submitInputData does not push to tropaList when form is invalid', () => {
+    const wrapper = shallowMount(RegistrationForm, {
+      global: {
+        provide: { tropaList: [...tropaList] }
+      }
+    })
+
+    wrapper.vm.formValidity = jest.fn().mockReturnValue(true)
+    const originalTropaListLength = wrapper.vm.tropaList.length
+
+    wrapper.vm.submitInputData()
+
+    expect(wrapper.vm.tropaList.length).toBe(originalTropaListLength)
+
+    wrapper.unmount()
+  })
+})
