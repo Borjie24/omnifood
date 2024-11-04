@@ -1,0 +1,130 @@
+import { shallowMount } from '@vue/test-utils'
+import SlamBookFriendList from '@/components/pages/Slambook/SlamBookFriendList.vue'
+import { TROPALISTBUTTON_PROPERTIES } from '@/common/recipe/rButton'
+
+describe('testing SlamBookFriendList', () => {
+  const tropaList = [
+    {
+      nickname: 'Sample',
+      fullname: 'Sample One',
+      age: '18',
+      birthdate: '2001-20-03',
+      email: 'sampleone@email.com',
+      phoneNumber: '09123456789',
+      zodiacSign: 'Libra',
+      drink: 'Yes',
+      smoke: 'Yes',
+      loveLanguage: ['Words of Affirmation', 'Acts of Service', 'Quality Time'],
+      motto: 'Sample Motto'
+    },
+    {
+      nickname: 'Samplo',
+      fullname: 'Sample Two',
+      age: '20',
+      birthdate: '2001-20-05',
+      email: 'sampletwo@email.com',
+      phoneNumber: '09123489512',
+      zodiacSign: 'Gemini',
+      drink: 'No',
+      smoke: 'No',
+      loveLanguage: ['Acts of Service', 'Quality Time', 'Physical Touch'],
+      motto: 'Sample Motto Two'
+    }
+  ]
+
+  test('toggles showDetailsButton for a specific tropa', () => {
+    const wrapper = shallowMount(SlamBookFriendList, {
+      global: {
+        provide: {
+          tropaList: [...tropaList]
+        }
+      },
+      data() {
+        return {
+          items: [...TROPALISTBUTTON_PROPERTIES]
+        }
+      }
+    })
+
+    const index = 0
+    const tropa = tropaList[index]
+
+    wrapper.vm.showDetails(index, tropa)
+    expect(tropa.showDetailsButton).toBe(true)
+    wrapper.vm.showDetails(index, tropa)
+    expect(tropa.showDetailsButton).toBe(false)
+  })
+
+  test('toggles favoriteButton for a specific tropa', () => {
+    const wrapper = shallowMount(SlamBookFriendList, {
+      global: {
+        provide: {
+          tropaList: [...tropaList]
+        }
+      },
+      data() {
+        return {
+          items: [...TROPALISTBUTTON_PROPERTIES]
+        }
+      }
+    })
+
+    const index = 0
+    const tropa = tropaList[index]
+
+    wrapper.vm.showFavorites(index, tropa)
+    expect(tropa.favoriteButton).toBe(true)
+    wrapper.vm.showFavorites(index, tropa)
+    expect(tropa.favoriteButton).toBe(false)
+  })
+
+  test('deletes tropa when confirmation is accepted', () => {
+    const wrapper = shallowMount(SlamBookFriendList, {
+      global: {
+        provide: {
+          tropaList: [...tropaList]
+        }
+      },
+      data() {
+        return {
+          items: [...TROPALISTBUTTON_PROPERTIES]
+        }
+      }
+    })
+
+    const index = 0
+    const tropa = tropaList[index]
+
+    // Mock confirm to return true for deletion
+    global.confirm = jest.fn(() => true)
+
+    wrapper.vm.deleteFriends(index, tropa)
+    expect(tropaList.length).toBe(1) // Adjusted expected length after deletion
+    expect(tropaList).not.toContainEqual(tropa)
+  })
+
+  test('does not delete tropa when confirmation is declined', () => {
+    const wrapper = shallowMount(SlamBookFriendList, {
+      global: {
+        provide: {
+          tropaList: [...tropaList]
+        }
+      },
+      data() {
+        return {
+          items: [...TROPALISTBUTTON_PROPERTIES]
+        }
+      }
+    })
+
+    const index = 0
+    const tropa = tropaList[index]
+
+    // Mock confirm to return false, so deletion should not happen
+    global.confirm = jest.fn(() => false)
+
+    wrapper.vm.deleteFriends(index, tropa)
+    expect(tropaList.length).toBe(2) // Expected length remains the same
+    expect(tropaList).toContainEqual(tropa)
+  })
+})
