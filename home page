@@ -3,14 +3,14 @@
     <b-row class="justify-content-center">
       <b-col
         sm="6"
-        md="4"
-        lg="3"
+        md="5"
+        lg="4"
         v-for="(title, index) in titles"
         :key="index"
         class="d-flex justify-content-center"
       >
         <b-card
-          class="mb-3 text-white"
+          class="mb-3 text-white card-hover"
           img-src="https://images.unsplash.com/photo-1482877346909-048fb6477632?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=958&q=80" 
           img-alt="article-cover"
           img-top
@@ -43,4 +43,12 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style>
+.card-hover {
+  transition: box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+</style>
