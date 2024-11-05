@@ -1,0 +1,74 @@
+import { shallowMount } from '@vue/test-utils'
+import RegistrationForm from '@/components/pages/Slambook/RegistrationForm.vue'
+
+describe('RegistrationForm.vue', () => {
+  test('addFormData updates formData with the correct key and value', () => {
+    const wrapper = shallowMount(RegistrationForm)
+    wrapper.vm.addFormData({ key: 'nickname', value: 'Sample' })
+    expect(wrapper.vm.formData.nickname).toBe('Sample')
+    wrapper.unmount()
+  })
+
+  test('resetKaibigan increments resetKaibiganId', () => {
+    const wrapper = shallowMount(RegistrationForm)
+    const initialId = wrapper.vm.resetKaibiganId
+    wrapper.vm.resetKaibigan()
+    expect(wrapper.vm.resetKaibiganId).toBe(initialId + 1)
+    wrapper.unmount()
+  })
+
+  test('checkValidity detects invalid nickname and sets isError to true', () => {
+    const wrapper = shallowMount(RegistrationForm)
+    wrapper.vm.formData.nickname = 'Invalid Nickname 123'
+    wrapper.vm.checkValidity()
+    expect(wrapper.vm.isError).toBe(true)
+    wrapper.unmount()
+  })
+
+  test('checkValidity detects valid inputs and sets isError to false', () => {
+    const wrapper = shallowMount(RegistrationForm)
+    wrapper.vm.formData = {
+      nickname: 'ValidNickname',
+      fullname: 'Valid Fullname',
+      age: '25',
+      birthday: '2000-01-01',
+      email: 'validemail@example.com',
+      phonenumber: '09123456789',
+      personality: 'Introvert',
+      gender: 'Male',
+      love: ['Words of Affirmation', 'Acts of Service', 'Quality Time'],
+      motto: 'Valid Motto'
+    }
+    wrapper.vm.checkValidity()
+    expect(wrapper.vm.isError).toBe(false)
+    wrapper.unmount()
+  })
+
+  test('formAddHandling emits addKaibigan event with formData when form is valid', () => {
+    const wrapper = shallowMount(RegistrationForm)
+    wrapper.vm.formData = {
+      nickname: 'NewTropa',
+      fullname: 'New Fullname',
+      age: '21',
+      birthday: '2003-01-01',
+      email: 'newtropa@example.com',
+      phonenumber: '09876543210',
+      personality: 'Extrovert',
+      gender: 'Female',
+      love: ['Quality Time', 'Acts of Service', 'Physical Touch'],
+      motto: 'New Motto'
+    }
+    wrapper.vm.checkValidity = jest.fn().mockReturnValue(false)
+    wrapper.vm.formAddHandling()
+    expect(wrapper.emitted().addKaibigan[0][0]).toEqual(wrapper.vm.formData)
+    wrapper.unmount()
+  })
+
+  test('formAddHandling does not emit addKaibigan when form is invalid', () => {
+    const wrapper = shallowMount(RegistrationForm)
+    wrapper.vm.checkValidity = jest.fn().mockReturnValue(true)
+    wrapper.vm.formAddHandling()
+    expect(wrapper.emitted().addKaibigan).toBeFalsy()
+    wrapper.unmount()
+  })
+})
