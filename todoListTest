@@ -1,0 +1,103 @@
+import { shallowMount } from '@vue/test-utils'
+import ToDoList from '@/components/pages/TodoList/ToDoList.vue'
+
+describe('ToDoList.vue', () => {
+  test('adds a task when input is provided and "Add Task" button is clicked', () => {
+    const wrapper = shallowMount(ToDoList)
+    wrapper.setData({ userInput: 'New Task' })
+
+    wrapper.vm.addTodoTask()
+
+    expect(wrapper.vm.tasks).toHaveLength(1)
+    expect(wrapper.vm.tasks[0].text).toBe('New Task')
+    wrapper.unmount()
+  })
+
+  test('does not add a task if input is empty', () => {
+    const wrapper = shallowMount(ToDoList)
+    wrapper.setData({ userInput: '' })
+
+    wrapper.vm.addTodoTask()
+
+    expect(wrapper.vm.tasks).toHaveLength(0)
+    expect(wrapper.vm.showError).toBe(true)
+    expect(wrapper.vm.alertMessage).toBe('Task cannot be empty or consist only of spaces!')
+    wrapper.unmount()
+  })
+
+  test('deletes a specific task', () => {
+    const wrapper = shallowMount(ToDoList)
+    wrapper.setData({ tasks: [{ text: 'Task to delete', completed: false }] })
+
+    wrapper.vm.deleteTask(0)
+
+    expect(wrapper.vm.tasks).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  test('clears completed tasks only', () => {
+    const wrapper = shallowMount(ToDoList)
+    wrapper.setData({
+      tasks: [
+        { text: 'Completed Task', completed: true },
+        { text: 'Incomplete Task', completed: false }
+      ]
+    })
+
+    wrapper.vm.clearCompletedTask()
+
+    expect(wrapper.vm.tasks).toHaveLength(1)
+    expect(wrapper.vm.tasks[0].text).toBe('Incomplete Task')
+    wrapper.unmount()
+  })
+
+  test('clears all tasks when "Clear All" is clicked and confirmed', () => {
+    const wrapper = shallowMount(ToDoList)
+    wrapper.setData({
+      tasks: [
+        { text: 'Task 1', completed: false },
+        { text: 'Task 2', completed: true }
+      ]
+    })
+
+    global.confirm = jest.fn(() => true)
+    wrapper.vm.clearAllTasks()
+
+    expect(wrapper.vm.tasks).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  test('opens FAQ modal when "FAQs" button is clicked', async () => {
+    const wrapper = shallowMount(ToDoList)
+    const showModalMock = jest.fn()
+    wrapper.vm.$refs['modal-1'] = { show: showModalMock }
+
+    wrapper.vm.getButtonFunctionality('faqs')
+    expect(showModalMock).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  test('styles completed tasks differently', () => {
+    const wrapper = shallowMount(ToDoList)
+    const completedTask = { text: 'Completed Task', completed: true }
+    const style = wrapper.vm.getStyleCompleted(completedTask)
+
+    expect(style).toEqual({
+      backgroundColor: '#d8f3dc',
+      color: '#2d6a4f'
+    })
+    wrapper.unmount()
+  })
+
+  test('styles incomplete tasks differently', () => {
+    const wrapper = shallowMount(ToDoList)
+    const incompleteTask = { text: 'Incomplete Task', completed: false }
+    const style = wrapper.vm.getStyleCompleted(incompleteTask)
+
+    expect(style).toEqual({
+      backgroundColor: '#ced4da',
+      color: '#1b4332'
+    })
+    wrapper.unmount()
+  })
+})
