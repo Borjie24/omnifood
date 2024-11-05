@@ -1,0 +1,72 @@
+methods: {
+  hasEmptyFields() {
+    return !this.userData.userOne.name || !this.userData.userTwo.name || 
+           !this.userData.userOne.weight || !this.userData.userTwo.weight || 
+           !this.userData.userOne.height || !this.userData.userTwo.height;
+  },
+  hasNegativeValues() {
+    return this.userData.userOne.weight <= 0 || this.userData.userTwo.weight <= 0 ||
+           this.userData.userOne.height <= 0 || this.userData.userTwo.height <= 0;
+  },
+  hasSpecialCharacters() {
+    const regexSpecial = /^[a-zA-Z\s]+$/;
+    return !regexSpecial.test(this.userData.userOne.name) || !regexSpecial.test(this.userData.userTwo.name);
+  },
+  inputTextValidation() {
+    const conditions = [
+      { condition: this.hasEmptyFields(), message: 'All fields must be filled for both users' },
+      { condition: this.hasNegativeValues(), message: 'Weight and Height should be positive integers only' },
+      { condition: this.hasSpecialCharacters(), message: 'No special characters or numbers for name input field' },
+    ];
+
+    for (const rule of conditions) {
+      if (rule.condition) {
+        this.alertMessage = rule.message;
+        this.showAlertInputField = true;
+        return true;
+      }
+    }
+    return false;
+  },
+  getButtonFunction(actionType) {
+    if (actionType === 'calculate') {
+      if (this.inputTextValidation()) return;
+
+      if (!this.clickedCalcButton) {
+        this.computeUserData();
+        this.dismissAlertValidation();
+        this.clickedCalcButton = true;
+      } else {
+        this.alertMessage = 'The BMI is already calculated, click Reset to calculate new data';
+        this.showAlertInputField = true;
+      }
+    } else if (actionType === 'compare') {
+      if (this.inputTextValidation()) {
+        this.alertMessage = 'No data to compare.';
+        this.showAlertInputField = true;
+      } else if (!this.clickedCalcButton) {
+        this.alertMessage = 'Calculate first to see the comparison';
+        this.showAlertInputField = true;
+      } else if (this.clickedCompareButton) {
+        this.alertMessage = 'BMI data is already compared, click Reset to compare new data';
+        this.showAlertInputField = true;
+      } else {
+        this.bmiAlertMessage = this.getBmiAlertMessage(
+          this.userData.userOne.name,
+          this.userData.userTwo.name,
+          this.computeUserBMI.user1,
+          this.computeUserBMI.user2
+        );
+        this.storeComparedData();
+        this.compareContainer = true;
+        this.clickedCompareButton = true;
+      }
+    } else if (actionType === 'reset') {
+      this.resetData();
+    }
+  },
+  dismissAlert(type) {
+    if (type === 'input') this.showAlertInputField = false;
+    if (type === 'compare') this.compareContainer = false;
+  },
+}
