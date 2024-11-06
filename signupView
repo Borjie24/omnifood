@@ -1,0 +1,116 @@
+<template>
+  <div>
+    <b-card>
+      <h2>Register</h2>
+      <b-form @submit.prevent="registerUser">
+        <!-- Username Field -->
+        <b-form-group label="Username:" label-for="username">
+          <b-form-input
+            id="username"
+            v-model="username"
+            type="text"
+            required
+            placeholder="Enter a username"
+          ></b-form-input>
+        </b-form-group>
+
+        <!-- Email Field -->
+        <b-form-group label="Email:" label-for="email">
+          <b-form-input
+            id="email"
+            v-model="email"
+            type="email"
+            required
+            placeholder="Enter your email"
+          ></b-form-input>
+        </b-form-group>
+
+        <!-- Password Field -->
+        <b-form-group label="Password:" label-for="password">
+          <b-form-input
+            id="password"
+            v-model="password"
+            type="password"
+            required
+            placeholder="Enter a password"
+          ></b-form-input>
+        </b-form-group>
+
+        <!-- Confirm Password Field -->
+        <b-form-group label="Confirm Password:" label-for="confirmPassword">
+          <b-form-input
+            id="confirmPassword"
+            v-model="confirmPassword"
+            type="password"
+            required
+            placeholder="Confirm your password"
+          ></b-form-input>
+        </b-form-group>
+
+        <!-- Register Button -->
+        <b-button variant="success" type="submit">Register</b-button>
+      </b-form>
+
+      <!-- Feedback Message -->
+
+      <b-form-text v-if="message">
+        {{ message }}
+      </b-form-text>
+    </b-card>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      message: '',
+    }
+  },
+  methods: {
+    registerUser() {
+      // Check if the username already exists in localStorage
+      if (localStorage.getItem(this.username)) {
+        this.message = 'Username already exists!'
+        return
+      }
+
+      // Check if the email already exists in localStorage
+      for (let i = 0; i < localStorage.length; i++) {
+        const userKey = localStorage.key(i)
+        const user = JSON.parse(localStorage.getItem(userKey))
+        if (user.email === this.email) {
+          this.message = 'Email already exists!'
+          return
+        }
+      }
+
+      // Check if passwords match
+      if (this.password !== this.confirmPassword) {
+        this.message = 'Passwords do not match!'
+        return
+      }
+
+      // Create the user object and store in localStorage
+      const user = { username: this.username, email: this.email, password: this.password }
+      localStorage.setItem(this.username, JSON.stringify(user))
+
+      // Display success message and reset fields
+      this.message = 'User registered successfully!'
+      this.$emit('registration-success') // Emit an event to trigger any additional actions
+      this.username = ''
+      this.email = ''
+      this.password = ''
+      this.confirmPassword = ''
+    },
+  },
+}
+</script>
+
+<style scoped>
+/* Additional styling if needed */
+</style>
