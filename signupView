@@ -12,6 +12,9 @@
             required
             placeholder="Enter a username"
           ></b-form-input>
+          <b-form-text v-if="messageUsername">
+            {{ messageUsername }}
+          </b-form-text>
         </b-form-group>
 
         <!-- Email Field -->
@@ -23,6 +26,9 @@
             required
             placeholder="Enter your email"
           ></b-form-input>
+          <b-form-text v-if="messageEmail">
+            {{ messageEmail }}
+          </b-form-text>
         </b-form-group>
 
         <!-- Password Field -->
@@ -45,6 +51,9 @@
             required
             placeholder="Confirm your password"
           ></b-form-input>
+          <b-form-text v-if="messagePassword">
+            {{ messagePassword }}
+          </b-form-text>
         </b-form-group>
 
         <!-- Register Button -->
@@ -69,13 +78,27 @@ export default {
       password: '',
       confirmPassword: '',
       message: '',
+      messageEmail: '',
+      messageUsername: '',
+      messagePassword: '',
     }
   },
   methods: {
+    // Function to clear specific validation message
+    clearMessage(message) {
+      this[message] = '' // Clears the specific message based on input field
+    },
+
     registerUser() {
+      // Clear all messages before validating
+      this.messageUsername = ''
+      this.messageEmail = ''
+      this.messagePassword = ''
+      this.message = ''
+
       // Check if the username already exists in localStorage
       if (localStorage.getItem(this.username)) {
-        this.message = 'Username already exists!'
+        this.messageUsername = 'Username already exists!'
         return
       }
 
@@ -84,14 +107,14 @@ export default {
         const userKey = localStorage.key(i)
         const user = JSON.parse(localStorage.getItem(userKey))
         if (user.email === this.email) {
-          this.message = 'Email already exists!'
+          this.messageEmail = 'Email already exists!'
           return
         }
       }
 
       // Check if passwords match
       if (this.password !== this.confirmPassword) {
-        this.message = 'Passwords do not match!'
+        this.messagePassword = 'Passwords do not match!'
         return
       }
 
@@ -101,7 +124,6 @@ export default {
 
       // Display success message and reset fields
       this.message = 'User registered successfully!'
-      this.$emit('registration-success') // Emit an event to trigger any additional actions
       this.username = ''
       this.email = ''
       this.password = ''
