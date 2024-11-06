@@ -1,0 +1,58 @@
+<template>
+  <div>
+    <b-card>
+      <h2>Login</h2>
+      <b-form @submit.prevent="loginUser">
+        <b-form-group label="Username:" label-for="username">
+          <b-form-input
+            id="username"
+            v-model="username"
+            type="text"
+            required
+            placeholder="Enter your username"
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Password:" label-for="password">
+          <b-form-input
+            id="password"
+            v-model="password"
+            type="password"
+            required
+            placeholder="Enter your password"
+          ></b-form-input>
+        </b-form-group>
+
+        <b-button variant="primary" type="submit">Login</b-button>
+      </b-form>
+
+      <b-form-text v-if="message">
+        {{ message }}
+      </b-form-text>
+    </b-card>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      username: '',
+      password: '',
+      message: '',
+    }
+  },
+  methods: {
+    loginUser() {
+      const user = JSON.parse(localStorage.getItem(this.username))
+      if (user && user.password === this.password) {
+        this.message = 'Login successful!'
+        // Emit the login event with username
+        this.$emit('login-success', this.username)
+      } else {
+        this.message = 'Invalid username or password!'
+      }
+    },
+  },
+}
+</script>
