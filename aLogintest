@@ -1,0 +1,116 @@
+import { shallowMount } from '@vue/test-utils'
+import LoginView from '@/views/LoginView.vue'
+
+describe('LoginView.vue', () => {
+  test('renders login form correctly', () => {
+    // Setup mock localStorage for the user
+    const userData = {
+      username: 'sampleUser',
+      password: 'samplePassword'
+    }
+    localStorage.setItem(userData.username, JSON.stringify(userData))
+
+    const wrapper = shallowMount(LoginView)
+
+    // Check if the form inputs are rendered
+    expect(wrapper.find('input#username').exists()).toBe(true)
+    expect(wrapper.find('input#password').exists()).toBe(true)
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
+
+    wrapper.unmount() // Cleanup
+    localStorage.clear() // Cleanup localStorage
+  })
+
+  test('loginUser method sets isLoggedIn in localStorage on successful login', () => {
+    // Setup mock localStorage for the user
+    const userData = {
+      username: 'sampleUser',
+      password: 'samplePassword'
+    }
+    localStorage.setItem(userData.username, JSON.stringify(userData))
+
+    const wrapper = shallowMount(LoginView)
+
+    // Set valid username and password
+    wrapper.setData({ username: 'sampleUser', password: 'samplePassword' })
+
+    // Trigger form submission
+    wrapper.find('form').trigger('submit.prevent')
+
+    expect(localStorage.getItem('isLoggedIn')).toBe('true')
+    expect(localStorage.getItem('loggedInUser')).toBe('sampleUser')
+
+    wrapper.unmount() // Cleanup
+    localStorage.clear() // Cleanup localStorage
+  })
+
+  test('loginUser method shows success message on valid login', () => {
+    // Setup mock localStorage for the user
+    const userData = {
+      username: 'sampleUser',
+      password: 'samplePassword'
+    }
+    localStorage.setItem(userData.username, JSON.stringify(userData))
+
+    const wrapper = shallowMount(LoginView)
+
+    // Set valid username and password
+    wrapper.setData({ username: 'sampleUser', password: 'samplePassword' })
+
+    // Trigger form submission
+    wrapper.find('form').trigger('submit.prevent')
+
+    expect(wrapper.vm.message).toBe('Login successful!')
+
+    wrapper.unmount() // Cleanup
+    localStorage.clear() // Cleanup localStorage
+  })
+
+  test('loginUser method shows error message on invalid username or password', () => {
+    // Setup mock localStorage for the user
+    const userData = {
+      username: 'sampleUser',
+      password: 'samplePassword'
+    }
+    localStorage.setItem(userData.username, JSON.stringify(userData))
+
+    const wrapper = shallowMount(LoginView)
+
+    // Set invalid username and password
+    wrapper.setData({ username: 'sampleUser', password: 'wrongPassword' })
+
+    // Trigger form submission
+    wrapper.find('form').trigger('submit.prevent')
+
+    expect(wrapper.vm.message).toBe('Invalid username or password!')
+
+    wrapper.unmount() // Cleanup
+    localStorage.clear() // Cleanup localStorage
+  })
+
+  test('loginUser emits login-success event on successful login', () => {
+    // Setup mock localStorage for the user
+    const userData = {
+      username: 'sampleUser',
+      password: 'samplePassword'
+    }
+    localStorage.setItem(userData.username, JSON.stringify(userData))
+
+    const wrapper = shallowMount(LoginView)
+    const loginSpy = jest.fn()
+
+    // Emit event from parent component
+    wrapper.vm.$on('login-success', loginSpy)
+
+    // Set valid username and password
+    wrapper.setData({ username: 'sampleUser', password: 'samplePassword' })
+
+    // Trigger form submission
+    wrapper.find('form').trigger('submit.prevent')
+
+    expect(loginSpy).toHaveBeenCalledWith('sampleUser')
+
+    wrapper.unmount() // Cleanup
+    localStorage.clear() // Cleanup localStorage
+  })
+})
