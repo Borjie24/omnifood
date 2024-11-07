@@ -1,0 +1,231 @@
+<template>
+  <div class="app">
+    <div v-if="!isLoggedIn" class="d-flex align-items-center justify-content-center mt-5">
+      <b-card class="w-25">
+        <!-- Login Form -->
+        <div v-if="showLoginForm">
+          <b-card-text>
+            <login-view @login-success="updateLoginStatus(true, $event)"></login-view>
+          </b-card-text>
+
+          <!-- "Don't have an account?" link to switch to SignUp -->
+          <div class="mt-3">
+            <span class="text-primary">
+              Don't have an account?
+              <span class="clickable" @click="showLoginForm = false">Sign up here</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- SignUp Form -->
+        <div v-else>
+          <b-card-text>
+            <sign-up></sign-up>
+          </b-card-text>
+
+          <!-- "Already have an account?" link to switch back to Login -->
+          <div class="mt-3">
+            <span v-if="!isLoggedIn" class="text-primary">
+              Already have an account?
+              <span class="clickable" @click="showLoginForm = true">Sign in here</span>
+            </span>
+          </div>
+        </div>
+      </b-card>
+    </div>
+
+    <div v-else>
+      <b-navbar toggleable="lg" type="dark" variant="info">
+        <b-navbar-brand href="#">NavBar</b-navbar-brand>
+
+        <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+
+        <b-collapse id="nav-collapse" is-nav>
+          <b-navbar-nav>
+            <b-nav-item>
+              <router-link to="/home" class="nav-link">Home</router-link>
+            </b-nav-item>
+            <b-nav-item>
+              <router-link class="nav-link">Link</router-link>
+            </b-nav-item>
+          </b-navbar-nav>
+
+          <b-navbar-nav class="ml-auto">
+            <b-nav-item-dropdown text=" username" right>
+              <template #button-content>
+                <div class="d-flex align-items-center">
+                  <em class="ml-2">{{ username }}</em>
+                </div>
+              </template>
+
+              <b-dropdown-item :disabled="true" class="text-break">
+                <span>{{ userEmail }}</span>
+              </b-dropdown-item>
+              <b-dropdown-item @click="editPassword">Change Password</b-dropdown-item>
+              <b-dropdown-item @click="deleteAccount">Delete Account</b-dropdown-item>
+
+              <b-dropdown-item @click="signOut">Sign Out</b-dropdown-item>
+            </b-nav-item-dropdown>
+          </b-navbar-nav>
+        </b-collapse>
+      </b-navbar>
+
+      <router-view></router-view>
+    </div>
+  </div>
+</template>
+
+<script>
+import LoginView from './views/LoginView.vue'
+import SignUp from './views/SignUp.vue'
+
+export default {
+  components: { LoginView, SignUp },
+  data() {
+    return {
+      isLoggedIn: false,
+      showLoginForm: true,
+      username: '',
+    }
+  },
+
+  methods: {
+    updateLoginStatus(status, username) {
+      this.isLoggedIn = status
+      if (username) {
+        this.username = username
+        this.fetchUserEmail()
+      }
+    },
+    fetchUserEmail() {
+      // Retrieve the current user's data from localStorage
+      const user = JSON.parse(localStorage.getItem(this.username))
+      if (user) {
+        this.userEmail = user.email || '' // Set the user's email
+      }
+    },
+    deleteAccount() {
+      if (confirm('Are you sure you want to delete your account?')) {
+        localStorage.removeItem(this.username)
+        this.isLoggedIn = false
+      }
+    },
+    signOut() {
+      this.isLoggedIn = false
+      localStorage.removeItem('isLoggedIn') // Clear login status
+      localStorage.removeItem('loggedInUser') // Clear stored username
+    },
+    editPassword() {
+      const user = JSON.parse(localStorage.getItem(this.username))
+
+      if (user) {
+        const email = prompt('Enter your email address:')
+        if (email === user.email) {
+          const newPassword = prompt('Enter new password:')
+          if (newPassword) {
+            user.password = newPassword
+            localStorage.setItem(this.username, JSON.stringify(user))
+            alert('Password updated successfully!')
+          } else {
+            alert('Password update failed. Please try again.')
+          }
+        } else {
+          alert('Email does not match the registered email.')
+        }
+      } else {
+        alert('User not found!')
+      }
+    },
+  },
+/**
+ * Checks localStorage for login status and username on component creation.
+ * Updates component state if a valid login is found.
+ * 
+ * @method created
+ * @memberof VueComponent
+ * @returns {void} This method does not return any value; it only updates the component state.
+ */
+  created() {
+    const loggedInStatus = JSON.parse(localStorage.getItem('isLoggedIn'))
+    const storedUsername = localStorage.getItem('loggedInUser')
+    if (loggedInStatus && storedUsername) {
+      this.isLoggedIn = true
+      this.username = storedUsername
+      this.fetchUserEmail() // Fetch email or other stored data
+    }
+  },
+}
+</script>
+
+<style scoped>
+.clickable {
+  cursor: pointer; /* Ensure the cursor is a pointer on hover */
+  text-decoration: underline;
+  color: #007bff; /* Blue color for the clickable text */
+  display: inline-block;
+}
+.clickable:hover {
+  color: #0056b3;
+}
+</style>
+----------------------------
+<template>
+  <div>
+    <b-card>
+      <h2>Login</h2>
+      <b-form @submit.prevent="loginUser">
+        <b-form-group label="Username:" label-for="username">
+          <b-form-input
+            id="username"
+            v-model="username"
+            type="text"
+            required
+            placeholder="Enter your username"
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Password:" label-for="password">
+          <b-form-input
+            id="password"
+            v-model="password"
+            type="password"
+            required
+            placeholder="Enter your password"
+          ></b-form-input>
+        </b-form-group>
+
+        <b-button variant="primary" type="submit">Login</b-button>
+      </b-form>
+
+      <b-form-text v-if="message">
+        {{ message }}
+      </b-form-text>
+    </b-card>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      username: '',
+      password: '',
+      message: '',
+    }
+  },
+  methods: {
+    loginUser() {
+      const user = JSON.parse(localStorage.getItem(this.username))
+      if (user && user.password === this.password) {
+        this.message = 'Login successful!'
+        localStorage.setItem('isLoggedIn', true) // Store login status
+        localStorage.setItem('loggedInUser', this.username) // Store the username
+        this.$emit('login-success', this.username)
+      } else {
+        this.message = 'Invalid username or password!'
+      }
+    },
+  },
+}
+</script>
+
