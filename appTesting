@@ -1,0 +1,120 @@
+import { shallowMount } from '@vue/test-utils'
+import App from '@/App.vue'
+
+describe('App.vue', () => {
+
+  test('renders login form when not logged in and showLoginForm is true', () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          isLoggedIn: false,
+          showLoginForm: true,
+          username: '',
+        }
+      },
+    })
+
+    expect(wrapper.findComponent({ name: 'LoginView' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'SignUp' }).exists()).toBe(false)
+
+    wrapper.unmount()  // Cleanup
+  })
+
+  test('renders sign-up form when not logged in and showLoginForm is false', async () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          isLoggedIn: false,
+          showLoginForm: false,
+          username: '',
+        }
+      },
+    })
+
+    await wrapper.setData({ showLoginForm: false })  // Await DOM update
+    expect(wrapper.findComponent({ name: 'SignUp' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'LoginView' }).exists()).toBe(false)
+
+    wrapper.unmount()  // Cleanup
+  })
+
+  test('renders navbar when logged in', () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          isLoggedIn: true,
+          showLoginForm: true,
+          username: '',
+        }
+      },
+    })
+
+    expect(wrapper.find('b-navbar').exists()).toBe(true)
+
+    wrapper.unmount()  // Cleanup
+  })
+
+  test('updates login status and username on login success', () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          isLoggedIn: false,
+          showLoginForm: true,
+          username: '',
+        }
+      },
+    })
+
+    const username = 'SampleUser'
+    wrapper.vm.updateLoginStatus(true, username)
+
+    expect(wrapper.vm.isLoggedIn).toBe(true)
+    expect(wrapper.vm.username).toBe(username)
+
+    wrapper.unmount()  // Cleanup
+  })
+
+  test('fetchUserEmail correctly sets user email if user exists in localStorage', () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          isLoggedIn: false,
+          showLoginForm: true,
+          username: 'SampleUser',
+          userEmail: ''
+        }
+      },
+    })
+
+    const mockUser = { email: 'sample@example.com' }
+    localStorage.setItem('SampleUser', JSON.stringify(mockUser))
+
+    wrapper.vm.fetchUserEmail()
+
+    expect(wrapper.vm.userEmail).toBe(mockUser.email)
+
+    wrapper.unmount()  // Cleanup
+  })
+
+  test('signOut sets isLoggedIn to false and clears localStorage data', () => {
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          isLoggedIn: true,
+          username: 'SampleUser',
+        }
+      },
+    })
+
+    localStorage.setItem('isLoggedIn', 'true')
+    localStorage.setItem('loggedInUser', 'SampleUser')
+
+    wrapper.vm.signOut()
+
+    expect(wrapper.vm.isLoggedIn).toBe(false)
+    expect(localStorage.getItem('isLoggedIn')).toBeNull()
+    expect(localStorage.getItem('loggedInUser')).toBeNull()
+
+    wrapper.unmount()  // Cleanup
+  })
+})
