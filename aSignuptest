@@ -1,0 +1,166 @@
+import { shallowMount } from '@vue/test-utils'
+import SignUpView from '@/components/SignUpView.vue'
+
+describe('SignUpView.vue', () => {
+  test('registerUser sets error message for existing username', () => {
+    const localStorageMock = (() => {
+      let store = {}
+      return {
+        getItem: (key) => store[key] || null,
+        setItem: (key, value) => { store[key] = value },
+        clear: () => { store = {} },
+        key: (index) => Object.keys(store)[index],
+        get length() {
+          return Object.keys(store).length
+        },
+      }
+    })()
+    
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+
+    localStorage.setItem('existingUser', JSON.stringify({ username: 'existingUser', email: 'email@example.com', password: 'password123' }))
+    
+    const wrapper = shallowMount(SignUpView)
+
+    wrapper.setData({
+      username: 'existingUser',
+      email: 'newemail@example.com',
+      password: 'password123',
+      confirmPassword: 'password123',
+    })
+
+    wrapper.vm.registerUser()
+
+    expect(wrapper.vm.messageUsername).toBe('Username already exists!')
+  })
+
+  test('registerUser sets error message for existing email', () => {
+    const localStorageMock = (() => {
+      let store = {}
+      return {
+        getItem: (key) => store[key] || null,
+        setItem: (key, value) => { store[key] = value },
+        clear: () => { store = {} },
+        key: (index) => Object.keys(store)[index],
+        get length() {
+          return Object.keys(store).length
+        },
+      }
+    })()
+    
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+
+    localStorage.setItem('newUser', JSON.stringify({ username: 'newUser', email: 'existingemail@example.com', password: 'password123' }))
+    
+    const wrapper = shallowMount(SignUpView)
+
+    wrapper.setData({
+      username: 'newUser2',
+      email: 'existingemail@example.com',
+      password: 'password123',
+      confirmPassword: 'password123',
+    })
+
+    wrapper.vm.registerUser()
+
+    expect(wrapper.vm.messageEmail).toBe('Email already exists!')
+  })
+
+  test('registerUser sets error message for password mismatch', () => {
+    const localStorageMock = (() => {
+      let store = {}
+      return {
+        getItem: (key) => store[key] || null,
+        setItem: (key, value) => { store[key] = value },
+        clear: () => { store = {} },
+        key: (index) => Object.keys(store)[index],
+        get length() {
+          return Object.keys(store).length
+        },
+      }
+    })()
+    
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+
+    const wrapper = shallowMount(SignUpView)
+
+    wrapper.setData({
+      username: 'newUser3',
+      email: 'newemail3@example.com',
+      password: 'password123',
+      confirmPassword: 'password456',
+    })
+
+    wrapper.vm.registerUser()
+
+    expect(wrapper.vm.messagePassword).toBe('Passwords do not match!')
+  })
+
+  test('registerUser successfully registers a user', () => {
+    const localStorageMock = (() => {
+      let store = {}
+      return {
+        getItem: (key) => store[key] || null,
+        setItem: (key, value) => { store[key] = value },
+        clear: () => { store = {} },
+        key: (index) => Object.keys(store)[index],
+        get length() {
+          return Object.keys(store).length
+        },
+      }
+    })()
+    
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+
+    const wrapper = shallowMount(SignUpView)
+
+    wrapper.setData({
+      username: 'newUser4',
+      email: 'newemail4@example.com',
+      password: 'password123',
+      confirmPassword: 'password123',
+    })
+
+    wrapper.vm.registerUser()
+
+    expect(wrapper.vm.message).toBe('User registered successfully!')
+    expect(localStorage.getItem('newUser4')).not.toBeNull()
+    const storedUser = JSON.parse(localStorage.getItem('newUser4'))
+    expect(storedUser.username).toBe('newUser4')
+    expect(storedUser.email).toBe('newemail4@example.com')
+    expect(storedUser.password).toBe('password123')
+  })
+
+  test('registerUser clears input fields after successful registration', () => {
+    const localStorageMock = (() => {
+      let store = {}
+      return {
+        getItem: (key) => store[key] || null,
+        setItem: (key, value) => { store[key] = value },
+        clear: () => { store = {} },
+        key: (index) => Object.keys(store)[index],
+        get length() {
+          return Object.keys(store).length
+        },
+      }
+    })()
+    
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+
+    const wrapper = shallowMount(SignUpView)
+
+    wrapper.setData({
+      username: 'newUser5',
+      email: 'newemail5@example.com',
+      password: 'password123',
+      confirmPassword: 'password123',
+    })
+
+    wrapper.vm.registerUser()
+
+    expect(wrapper.vm.username).toBe('')
+    expect(wrapper.vm.email).toBe('')
+    expect(wrapper.vm.password).toBe('')
+    expect(wrapper.vm.confirmPassword).toBe('')
+  })
+})
