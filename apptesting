@@ -1,0 +1,515 @@
+ test('updateLoginStatus updates isLoggedIn and username, and calls fetchUserEmail if username is provided', () => {
+    const fetchUserEmailMock = jest.fn();
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          isLoggedIn: false,
+          username: ''
+        }
+      },
+      methods: {
+        fetchUserEmail: fetchUserEmailMock
+      }
+    })
+
+    // Test case 1: updating isLoggedIn without username
+    wrapper.vm.updateLoginStatus(true, null)
+    expect(wrapper.vm.isLoggedIn).toBe(true)
+    expect(wrapper.vm.username).toBe('')
+    expect(fetchUserEmailMock).not.toHaveBeenCalled()
+
+    // Test case 2: updating isLoggedIn with username
+    wrapper.vm.updateLoginStatus(true, 'testUser')
+    expect(wrapper.vm.isLoggedIn).toBe(true)
+    expect(wrapper.vm.username).toBe('testUser')
+    expect(fetchUserEmailMock).toHaveBeenCalled()
+  })
+
+
+-----------
+
+  test('fetchUserEmail sets userEmail if user data exists in localStorage', () => {
+    // Clear localStorage before this test
+    localStorage.clear()
+
+    const testUsername = 'testUser'
+    const testEmail = 'test@example.com'
+
+    // Set up localStorage with user data
+    localStorage.setItem(testUsername, JSON.stringify({ email: testEmail }))
+
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          username: testUsername,
+          userEmail: ''
+        }
+      }
+    })
+
+    // Call the fetchUserEmail method
+    wrapper.vm.fetchUserEmail()
+
+    // Check that userEmail was updated correctly
+    expect(wrapper.vm.userEmail).toBe(testEmail)
+  })
+
+  test('fetchUserEmail sets userEmail to empty string if user does not exist in localStorage', () => {
+    // Clear localStorage before this test
+    localStorage.clear()
+
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          username: 'nonExistentUser',
+          userEmail: 'initialEmail'
+        }
+      }
+    })
+
+    // Call the fetchUserEmail method
+    wrapper.vm.fetchUserEmail()
+
+    // Check that userEmail was set to an empty string
+    expect(wrapper.vm.userEmail).toBe('')
+  })
+
+---------------
+import { shallowMount } from '@vue/test-utils'
+import App from '@/App.vue'
+
+describe('testing deleteAccount method in App.vue', () => {
+  test('deleteAccount removes user data and navigates to home-view', () => {
+    const mockRouter = { push: jest.fn() }
+    const mockConfirm = jest.fn().mockReturnValue(true) // Simulate user clicking "OK" on the confirmation prompt
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      },
+      data() {
+        return {
+          username: 'testUser',
+          isLoggedIn: true
+        }
+      }
+    })
+
+    // Mock localStorage
+    const removeItemMock = jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {})
+
+    // Simulate calling deleteAccount
+    wrapper.vm.deleteAccount()
+
+    // Check if localStorage.removeItem was called with the correct keys
+    expect(removeItemMock).toHaveBeenCalledWith('testUser') // username removed
+    expect(removeItemMock).toHaveBeenCalledWith('isLoggedIn') // isLoggedIn removed
+    expect(removeItemMock).toHaveBeenCalledWith('loggedInUser') // loggedInUser removed
+
+    // Check if the login status was updated to false
+    expect(wrapper.vm.isLoggedIn).toBe(false)
+
+    // Check if the router.push was called with the correct route
+    expect(mockRouter.push).toHaveBeenCalledWith({ name: 'home-view' })
+
+    // Check if confirm was called
+    expect(mockConfirm).toHaveBeenCalled()
+
+    // Restore the original localStorage.removeItem implementation
+    removeItemMock.mockRestore()
+  })
+
+  test('deleteAccount does not remove user data or navigate if user cancels confirmation', () => {
+    const mockRouter = { push: jest.fn() }
+    const mockConfirm = jest.fn().mockReturnValue(false) // Simulate user clicking "Cancel" on the confirmation prompt
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      },
+      data() {
+        return {
+          username: 'testUser',
+          isLoggedIn: true
+        }
+      }
+    })
+
+    // Mock localStorage
+    const removeItemMock = jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {})
+
+    // Simulate calling deleteAccount
+    wrapper.vm.deleteAccount()
+
+    // Check that localStorage.removeItem was not called
+    expect(removeItemMock).not.toHaveBeenCalled()
+
+    // Check that the login status was not changed
+    expect(wrapper.vm.isLoggedIn).toBe(true)
+
+    // Check that router.push was not called
+    expect(mockRouter.push).not.toHaveBeenCalled()
+
+    // Check that confirm was called
+    expect(mockConfirm).toHaveBeenCalled()
+
+    // Restore the original localStorage.removeItem implementation
+    removeItemMock.mockRestore()
+  })
+})
+
+-------------
+import { shallowMount } from '@vue/test-utils'
+import App from '@/App.vue'
+
+describe('testing signOut method in App.vue', () => {
+  test('signOut removes user data and navigates to home-view', () => {
+    const mockRouter = { push: jest.fn() }
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      },
+      data() {
+        return {
+          isLoggedIn: true,
+          username: 'testUser'
+        }
+      }
+    })
+
+    // Mock localStorage
+    const removeItemMock = jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {})
+
+    // Simulate calling signOut
+    wrapper.vm.signOut()
+
+    // Check if localStorage.removeItem was called with the correct keys
+    expect(removeItemMock).toHaveBeenCalledWith('isLoggedIn') // isLoggedIn removed
+    expect(removeItemMock).toHaveBeenCalledWith('loggedInUser') // loggedInUser removed
+
+    // Check if the login status was updated to false
+    expect(wrapper.vm.isLoggedIn).toBe(false)
+
+    // Check if the router.push was called with the correct route
+    expect(mockRouter.push).toHaveBeenCalledWith({ name: 'home-view' })
+
+    // Restore the original localStorage.removeItem implementation
+    removeItemMock.mockRestore()
+  })
+})
+--------------------------
+import { shallowMount } from '@vue/test-utils'
+import App from '@/App.vue'
+
+describe('testing changePassword method in App.vue', () => {
+
+  test('Successfully change password when valid email and password are provided', () => {
+    // Mock localStorage.getItem
+    const mockLocalStorageGetItem = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      return JSON.stringify({
+        email: 'test@example.com',
+        password: 'oldpassword123',
+      })
+    })
+
+    // Mock localStorage.setItem
+    const mockLocalStorageSetItem = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {})
+
+    // Mock alert and prompt
+    const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {})
+    const mockPrompt = jest.spyOn(window, 'prompt').mockImplementation((message) => {
+      if (message === 'Enter your email address:') {
+        return 'test@example.com'; // simulate correct email input
+      }
+      if (message === 'Enter new password:') {
+        return 'newPassword123'; // simulate valid new password input
+      }
+    })
+
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: {}
+        }
+      },
+      data() {
+        return {
+          username: 'testUser',
+        }
+      }
+    })
+
+    // Call the changePassword method
+    wrapper.vm.changePassword()
+
+    // Assert that localStorage.setItem was called with the updated user object
+    expect(mockLocalStorageSetItem).toHaveBeenCalledWith(
+      'testUser',
+      JSON.stringify({ email: 'test@example.com', password: 'newPassword123' })
+    )
+
+    // Assert that alert was called with the success message
+    expect(mockAlert).toHaveBeenCalledWith('Password updated successfully!')
+
+    // Clean up mocks
+    mockLocalStorageGetItem.mockRestore()
+    mockLocalStorageSetItem.mockRestore()
+    mockAlert.mockRestore()
+    mockPrompt.mockRestore()
+  })
+
+  test('Fail to change password when email does not match', () => {
+    // Mock localStorage.getItem
+    const mockLocalStorageGetItem = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      return JSON.stringify({
+        email: 'test@example.com',
+        password: 'oldpassword123',
+      })
+    })
+
+    // Mock alert and prompt
+    const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {})
+    const mockPrompt = jest.spyOn(window, 'prompt').mockImplementation((message) => {
+      if (message === 'Enter your email address:') {
+        return 'wrongemail@example.com'; // simulate incorrect email input
+      }
+      return '';
+    })
+
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: {}
+        }
+      },
+      data() {
+        return {
+          username: 'testUser',
+        }
+      }
+    })
+
+    // Call the changePassword method
+    wrapper.vm.changePassword()
+
+    // Assert that alert was called with the mismatch message
+    expect(mockAlert).toHaveBeenCalledWith('Email does not match the registered email.')
+
+    // Clean up mocks
+    mockLocalStorageGetItem.mockRestore()
+    mockAlert.mockRestore()
+    mockPrompt.mockRestore()
+  })
+
+  test('Fail to change password when user is not found', () => {
+    // Mock localStorage.getItem
+    const mockLocalStorageGetItem = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => null)
+
+    // Mock alert and prompt
+    const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {})
+    const mockPrompt = jest.spyOn(window, 'prompt').mockImplementation(() => '')
+
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: {}
+        }
+      },
+      data() {
+        return {
+          username: 'nonexistentUser',
+        }
+      }
+    })
+
+    // Call the changePassword method
+    wrapper.vm.changePassword()
+
+    // Assert that alert was called with the user not found message
+    expect(mockAlert).toHaveBeenCalledWith('User not found!')
+
+    // Clean up mocks
+    mockLocalStorageGetItem.mockRestore()
+    mockAlert.mockRestore()
+    mockPrompt.mockRestore()
+  })
+
+  test('Fail to change password when password does not meet validation', () => {
+    // Mock localStorage.getItem
+    const mockLocalStorageGetItem = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      return JSON.stringify({
+        email: 'test@example.com',
+        password: 'oldpassword123',
+      })
+    })
+
+    // Mock alert and prompt
+    const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {})
+    const mockPrompt = jest.spyOn(window, 'prompt').mockImplementation((message) => {
+      if (message === 'Enter your email address:') {
+        return 'test@example.com'; // correct email input
+      }
+      if (message === 'Enter new password:') {
+        return 'short'; // invalid password input (too short)
+      }
+    })
+
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: {}
+        }
+      },
+      data() {
+        return {
+          username: 'testUser',
+        }
+      }
+    })
+
+    // Call the changePassword method
+    wrapper.vm.changePassword()
+
+    // Assert that alert was called with the failed validation message
+    expect(mockAlert).toHaveBeenCalledWith(
+      'Password update failed. password should be 8 to 16 characters only and not contain white space only, Please try again.'
+    )
+
+    // Clean up mocks
+    mockLocalStorageGetItem.mockRestore()
+    mockAlert.mockRestore()
+    mockPrompt.mockRestore()
+  })
+})
+__________________________
+
+import { shallowMount } from '@vue/test-utils'
+import App from '@/App.vue'
+
+describe('testing initializedLocalStorageData method in App.vue', () => {
+
+  test('should set isLoggedIn and username when logged in and user data is in localStorage', () => {
+    // Mock localStorage data
+    global.localStorage.getItem = jest.fn((key) => {
+      if (key === 'isLoggedIn') {
+        return JSON.stringify(true); // user is logged in
+      }
+      if (key === 'loggedInUser') {
+        return 'testUser'; // username is stored
+      }
+      return null;
+    })
+
+    // Mock fetchUserEmail method
+    const fetchUserEmail = jest.fn()
+
+    // Mock router push
+    const mockRouter = { push: jest.fn() }
+
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      },
+      methods: {
+        fetchUserEmail
+      },
+      data() {
+        return {
+          isLoggedIn: false,
+          username: ''
+        }
+      }
+    })
+
+    // Call the method
+    wrapper.vm.initializedLocalStorageData()
+
+    // Assert that the isLoggedIn is set to true
+    expect(wrapper.vm.isLoggedIn).toBe(true)
+
+    // Assert that the username is set
+    expect(wrapper.vm.username).toBe('testUser')
+
+    // Assert that fetchUserEmail was called
+    expect(fetchUserEmail).toHaveBeenCalled()
+
+    // Assert that router.push was NOT called since the user is logged in
+    expect(mockRouter.push).not.toHaveBeenCalled()
+  })
+
+  test('should navigate to home-view when not logged in and no user data in localStorage', () => {
+    // Mock localStorage data as if the user is not logged in
+    global.localStorage.getItem = jest.fn((key) => {
+      if (key === 'isLoggedIn') {
+        return JSON.stringify(false); // user is not logged in
+      }
+      return null;
+    })
+
+    // Mock router push
+    const mockRouter = { push: jest.fn() }
+
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      },
+      data() {
+        return {
+          isLoggedIn: false,
+          username: ''
+        }
+      }
+    })
+
+    // Call the method
+    wrapper.vm.initializedLocalStorageData()
+
+    // Assert that router.push was called with 'home-view'
+    expect(mockRouter.push).toHaveBeenCalledWith({ name: 'home-view' })
+  })
+
+  test('should not navigate to home-view when logged in', () => {
+    // Mock localStorage data as if the user is logged in
+    global.localStorage.getItem = jest.fn((key) => {
+      if (key === 'isLoggedIn') {
+        return JSON.stringify(true); // user is logged in
+      }
+      if (key === 'loggedInUser') {
+        return 'testUser'; // username is stored
+      }
+      return null;
+    })
+
+    // Mock router push
+    const mockRouter = { push: jest.fn() }
+
+    const wrapper = shallowMount(App, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      },
+      data() {
+        return {
+          isLoggedIn: false,
+          username: ''
+        }
+      }
+    })
+
+    // Call the method
+    wrapper.vm.initializedLocalStorageData()
+
+    // Assert that router.push was NOT called since the user is logged in
+    expect(mockRouter.push).not.toHaveBeenCalled()
+  })
+})
+
