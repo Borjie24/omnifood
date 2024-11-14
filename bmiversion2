@@ -1,0 +1,244 @@
+import { shallowMount } from '@vue/test-utils'
+import BMIComparison from '@/components/BMIComparison.vue'
+
+describe('BMIComparison.vue', () => {
+  
+  // Test for addUserData method
+  test('should add user data for userOne', () => {
+    const wrapper = shallowMount(BMIComparison)
+    const data = { key: 'name', value: 'John' }
+    wrapper.vm.addUserData(data, 1)
+    expect(wrapper.vm.userData.userOne.name).toBe('John')
+  })
+
+  test('should add user data for userTwo', () => {
+    const wrapper = shallowMount(BMIComparison)
+    const data = { key: 'weight', value: 75 }
+    wrapper.vm.addUserData(data, 2)
+    expect(wrapper.vm.userData.userTwo.weight).toBe(75)
+  })
+
+  // Test for addUserComparisonData method
+  test('should add comparison data for userOne', () => {
+    const wrapper = shallowMount(BMIComparison)
+    const data = { key: 'height', value: 180 }
+    wrapper.vm.addUserComparisonData(data, 1)
+    expect(wrapper.vm.userComparisonData.userOne.height).toBe(180)
+  })
+
+  test('should add comparison data for userTwo', () => {
+    const wrapper = shallowMount(BMIComparison)
+    const data = { key: 'name', value: 'Jane' }
+    wrapper.vm.addUserComparisonData(data, 2)
+    expect(wrapper.vm.userComparisonData.userTwo.name).toBe('Jane')
+  })
+
+  // Test for inputTextValidation method
+  test('should return true if no input data is provided', () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: '', weight: '', height: '' },
+        userTwo: { name: '', weight: '', height: '' }
+      }
+    })
+    expect(wrapper.vm.inputTextValidation()).toBe(true)
+  })
+
+  test('should return true for negative numbers in weight or height', () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: -70, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+    expect(wrapper.vm.inputTextValidation()).toBe(true)
+  })
+
+  test('should return true for invalid name input with special characters', () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John@', weight: 70, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+    expect(wrapper.vm.inputTextValidation()).toBe(true)
+  })
+
+  test('should return false for valid input data', () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 70, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+    expect(wrapper.vm.inputTextValidation()).toBe(false)
+  })
+
+  // Test for computeUserData method
+  test('should compute and store BMI values correctly', () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+    wrapper.vm.computeUserData()
+    expect(wrapper.vm.userOneBMI).toBe('24.49')
+    expect(wrapper.vm.userTwoBMI).toBe('25.39')
+  })
+
+  // Test for getButtonFunction method
+  test('should handle calculate button click and show BMI computation', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+
+    await wrapper.vm.getButtonFunction('calculate')
+    expect(wrapper.vm.clickedCalcButton).toBe(true)
+    expect(wrapper.vm.alertMessage).toBe('')
+  })
+
+  test('should show alert message if BMI is already calculated when clicking calculate', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      },
+      clickedCalcButton: true
+    })
+
+    await wrapper.vm.getButtonFunction('calculate')
+    expect(wrapper.vm.alertMessage).toBe('The BMI is already calculated, click Reset to calculate new data')
+  })
+
+  test('should handle compare button click and show comparison message', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+
+    await wrapper.vm.getButtonFunction('calculate')
+    await wrapper.vm.getButtonFunction('compare')
+    expect(wrapper.vm.bmiAlertMessage).toBe('John has greater BMI of 24.49')
+  })
+
+  test('should reset all data when reset button is clicked', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      },
+      clickedCalcButton: true,
+      clickedCompareButton: true
+    })
+
+    await wrapper.vm.getButtonFunction('reset')
+    expect(wrapper.vm.userData.userOne.name).toBe('')
+    expect(wrapper.vm.userData.userTwo.name).toBe('')
+    expect(wrapper.vm.clickedCalcButton).toBe(false)
+    expect(wrapper.vm.clickedCompareButton).toBe(false)
+  })
+
+  // Test for classifyBMI method
+  test('should classify BMI correctly for userOne', () => {
+    const wrapper = shallowMount(BMIComparison)
+    expect(wrapper.vm.classifyBMI(24.49)).toBe('Normal')
+    expect(wrapper.vm.classifyBMI(17.5)).toBe('Underweight')
+    expect(wrapper.vm.classifyBMI(31.0)).toBe('Overweight')
+    expect(wrapper.vm.classifyBMI(36.0)).toBe('Obesity I')
+    expect(wrapper.vm.classifyBMI(41.0)).toBe('Extreme Obesity')
+  })
+
+  // Test for getBmiAlertMessage method
+  test('should return correct BMI comparison message', () => {
+    const wrapper = shallowMount(BMIComparison)
+    expect(wrapper.vm.getBmiAlertMessage('John', 'Jane', 24.49, 25.39)).toBe('Jane has greater BMI of 25.39')
+    expect(wrapper.vm.getBmiAlertMessage('John', 'Jane', 25.39, 25.39)).toBe('John and Jane have the same BMI of 25.39')
+  })
+})
+---------------
+import { shallowMount } from '@vue/test-utils'
+import BMIComparison from '@/components/BMIComparison.vue'
+
+describe('BMIComparison.vue', () => {
+
+  test('should render the heading correctly', () => {
+    const wrapper = shallowMount(BMIComparison)
+    const heading = wrapper.find('h1')
+    expect(heading.text()).toBe('BMI Comparison')
+  })
+
+  test('should display an alert message when input validation fails due to zero weight', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    await wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 0, height: 175 },
+        userTwo: { name: 'Jane', weight: 70, height: 160 }
+      }
+    })
+    await wrapper.vm.getButtonFunction('calculate')
+
+    const alertMessage = wrapper.find('.alert')
+    expect(alertMessage.text()).toContain('Weight and Height should be positive integer only')
+  })
+
+  test('should compute BMI correctly for both users', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    await wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+
+    await wrapper.vm.getButtonFunction('calculate')
+
+    expect(wrapper.vm.userOneBMI).toBe('24.49')
+    expect(wrapper.vm.userTwoBMI).toBe('25.39')
+  })
+
+  test('should classify BMI as normal for userOne if BMI is between 18.5 and 25', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    await wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+
+    await wrapper.vm.getButtonFunction('calculate')
+    const classification = wrapper.vm.classifyBMI(wrapper.vm.userOneBMI)
+
+    expect(classification).toBe('Normal')
+  })
+
+  test('should display BMI comparison message when comparing users after calculation', async () => {
+    const wrapper = shallowMount(BMIComparison)
+    await wrapper.setData({
+      userData: {
+        userOne: { name: 'John', weight: 75, height: 175 },
+        userTwo: { name: 'Jane', weight: 65, height: 160 }
+      }
+    })
+
+    await wrapper.vm.getButtonFunction('calculate')
+    await wrapper.vm.getButtonFunction('compare')
+
+    expect(wrapper.vm.bmiComparisonMessage).toBe('User John BMI (24.49) vs User Jane BMI (25.39)')
+  })
+
+})
