@@ -25,3 +25,60 @@ test('open FAQ modal when FAQ button is clicked', async () => {
   // Assert that the show method was called on the modal
   expect(wrapper.vm.$refs['modal-1'].show).toHaveBeenCalled();
 });
+
+
+test('calls clearCompletedTask when actionType is "clearCompleted"', () => {
+  const wrapper = shallowMount(ToDoList, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BAlert: 'b-alert',
+        BInputGroup: 'b-input-group',
+        BRow: 'b-row',
+        BCol: 'b-col',
+        BListGroup: 'b-list-group',
+        BListGroupItem: 'b-list-group-item',
+        BFormCheckbox: 'b-form-checkbox',
+        BCard: 'b-card',
+        BModal: 'b-modal'
+      }
+    }
+  });
+
+  // Mock clearCompletedTask method
+  wrapper.vm.clearCompletedTask = jest.fn();
+
+  // Call the function with 'clearCompleted' actionType
+  wrapper.vm.getButtonFunctionality('clearCompleted');
+
+  // Check if clearCompletedTask was called
+  expect(wrapper.vm.clearCompletedTask).toHaveBeenCalled();
+});
+
+test('calls clearAllTasks when actionType is "clearAll"', () => {
+  const wrapper = shallowMount(ToDoList, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BAlert: 'b-alert',
+        BInputGroup: 'b-input-group',
+        BRow: 'b-row',
+        BCol: 'b-col',
+        BListGroup: 'b-list-group',
+        BListGroupItem: 'b-list-group-item',
+        BFormCheckbox: 'b-form-checkbox',
+        BCard: 'b-card',
+        BModal: 'b-modal'
+      }
+    }
+  });
+
+  // Mock clearAllTasks method
+  wrapper.vm.clearAllTasks = jest.fn();
+
+  // Call the function with 'clearAll' actionType
+  wrapper.vm.getButtonFunctionality('clearAll');
+
+  // Check if clearAllTasks was called
+  expect(wrapper.vm.clearAllTasks).toHaveBeenCalled();
+});
