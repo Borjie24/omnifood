@@ -1,0 +1,287 @@
+test('updateLoginStatus updates isLoggedIn and username, and calls fetchUserEmail when username is provided', () => {
+  const mockRouter = { push: jest.fn() }
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        isLoggedIn: false,
+        username: '',
+        userEmail: ''
+      }
+    },
+    methods: {
+      fetchUserEmail: jest.fn() // Mock fetchUserEmail
+    }
+  })
+
+  const status = true
+  const username = 'SampleUser'
+
+  wrapper.vm.updateLoginStatus(status, username)
+
+  expect(wrapper.vm.isLoggedIn).toBe(true)
+  expect(wrapper.vm.username).toBe(username)
+  expect(wrapper.vm.fetchUserEmail).toHaveBeenCalled()
+})
+
+test('updateLoginStatus updates isLoggedIn but does not call fetchUserEmail when username is not provided', () => {
+  const mockRouter = { push: jest.fn() }
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        isLoggedIn: false,
+        username: '',
+        userEmail: ''
+      }
+    },
+    methods: {
+      fetchUserEmail: jest.fn() // Mock fetchUserEmail
+    }
+  })
+
+  const status = true
+  const username = null
+
+  wrapper.vm.updateLoginStatus(status, username)
+
+  expect(wrapper.vm.isLoggedIn).toBe(true)
+  expect(wrapper.vm.username).toBe('')
+  expect(wrapper.vm.fetchUserEmail).not.toHaveBeenCalled()
+})
+
+test('deleteAccount removes user data and redirects to home-view', () => {
+  const mockRouter = { push: jest.fn() }
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        isLoggedIn: true,
+        username: 'SampleUser'
+      }
+    }
+  })
+
+  localStorage.setItem('SampleUser', JSON.stringify({ email: 'test@example.com' }))
+  localStorage.setItem('isLoggedIn', true)
+  localStorage.setItem('loggedInUser', 'SampleUser')
+
+  window.confirm = jest.fn(() => true) // Mock confirmation dialog to return true
+
+  wrapper.vm.deleteAccount()
+  expect(localStorage.getItem('SampleUser')).toBeNull()
+  expect(localStorage.getItem('isLoggedIn')).toBeNull()
+  expect(localStorage.getItem('loggedInUser')).toBeNull()
+  expect(wrapper.vm.isLoggedIn).toBe(false)
+  expect(mockRouter.push).toHaveBeenCalledWith({ name: 'home-view' })
+})
+
+test('signOut clears session and redirects to home-view', () => {
+  const mockRouter = { push: jest.fn() }
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        isLoggedIn: true
+      }
+    }
+  })
+
+  localStorage.setItem('isLoggedIn', true)
+  localStorage.setItem('loggedInUser', 'SampleUser')
+
+  wrapper.vm.signOut()
+  expect(localStorage.getItem('isLoggedIn')).toBeNull()
+  expect(localStorage.getItem('loggedInUser')).toBeNull()
+  expect(wrapper.vm.isLoggedIn).toBe(false)
+  expect(mockRouter.push).toHaveBeenCalledWith({ name: 'home-view' })
+})
+
+test('changePassword updates password when valid email and password are provided', () => {
+  const mockRouter = { push: jest.fn() }
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        username: 'SampleUser'
+      }
+    }
+  })
+
+  const mockUser = { email: 'test@example.com', password: 'oldPassword' }
+  localStorage.setItem('SampleUser', JSON.stringify(mockUser))
+
+  window.prompt = jest.fn()
+    .mockReturnValueOnce('test@example.com') // Mock email input
+    .mockReturnValueOnce('newPassword123') // Mock new password input
+
+  wrapper.vm.changePassword()
+  const updatedUser = JSON.parse(localStorage.getItem('SampleUser'))
+  expect(updatedUser.password).toBe('newPassword123')
+  localStorage.clear()
+})
+
+test('changePassword does not update password if email does not match', () => {
+  const mockRouter = { push: jest.fn() }
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        username: 'SampleUser'
+      }
+    }
+  })
+
+  const mockUser = { email: 'test@example.com', password: 'oldPassword' }
+  localStorage.setItem('SampleUser', JSON.stringify(mockUser))
+
+  window.prompt = jest.fn()
+    .mockReturnValueOnce('wrong@example.com') // Mock incorrect email input
+
+  wrapper.vm.changePassword()
+  const unchangedUser = JSON.parse(localStorage.getItem('SampleUser'))
+  expect(unchangedUser.password).toBe('oldPassword')
+  localStorage.clear()
+})
+
+test('initializedLocalStorageData restores session when valid data exists', () => {
+  const mockRouter = { push: jest.fn() }
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        isLoggedIn: false,
+        username: ''
+      }
+    }
+  })
+
+  localStorage.setItem('isLoggedIn', true)
+  localStorage.setItem('loggedInUser', 'SampleUser')
+  localStorage.setItem('SampleUser', JSON.stringify({ email: 'test@example.com' }))
+
+  wrapper.vm.initializedLocalStorageData()
+  expect(wrapper.vm.isLoggedIn).toBe(true)
+  expect(wrapper.vm.username).toBe('SampleUser')
+  expect(wrapper.vm.userEmail).toBe('test@example.com')
+  localStorage.clear()
+})
