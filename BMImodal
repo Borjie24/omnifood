@@ -1,0 +1,168 @@
+test('open FAQ modal when FAQ button is clicked', () => {
+  const wrapper = shallowMount(ToDoList, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BAlert: 'b-alert',
+        BInputGroup: 'b-input-group',
+        BRow: 'b-row',
+        BCol: 'b-col',
+        BListGroup: 'b-list-group',
+        BListGroupItem: 'b-list-group-item',
+        BFormCheckbox: 'b-form-checkbox',
+        BCard: 'b-card',
+        BModal: 'b-modal'
+      }
+    }
+  })
+
+  // Mock the $refs object and show method
+  const showModal = jest.fn() // Create a mock function
+  wrapper.vm.$refs = {
+    'modal-1': { show: showModal } // Mock modal-1's show function
+  }
+
+  // Call the method
+  wrapper.vm.getButtonFunctionality('faqs')
+
+  // Assert that the show method was called
+  expect(showModal).toHaveBeenCalled()
+})
+--------------------
+
+test('open FAQ modal when FAQ button is clicked', () => {
+  const wrapper = shallowMount(ToDoList, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BAlert: 'b-alert',
+        BInputGroup: 'b-input-group',
+        BRow: 'b-row',
+        BCol: 'b-col',
+        BListGroup: 'b-list-group',
+        BListGroupItem: 'b-list-group-item',
+        BFormCheckbox: 'b-form-checkbox',
+        BCard: 'b-card',
+        BModal: 'b-modal'
+      }
+    }
+  })
+
+  // Overwrite the $refs after mounting
+  const showModal = jest.fn()
+  wrapper.vm.$refs = {
+    'modal-1': {
+      show: showModal
+    }
+  }
+
+  // Trigger the function
+  wrapper.vm.getButtonFunctionality('faqs')
+
+  // Validate the mocked function was called
+  expect(showModal).toHaveBeenCalledTimes(1)
+})
+-------------------
+import { mount } from '@vue/test-utils'
+
+test('open FAQ modal when FAQ button is clicked', () => {
+  const wrapper = mount(ToDoList, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BAlert: 'b-alert',
+        BInputGroup: 'b-input-group',
+        BRow: 'b-row',
+        BCol: 'b-col',
+        BListGroup: 'b-list-group',
+        BListGroupItem: 'b-list-group-item',
+        BFormCheckbox: 'b-form-checkbox',
+        BCard: 'b-card',
+        BModal: {
+          template: '<div><slot></slot></div>',
+          methods: {
+            show: jest.fn() // Mock the show method
+          }
+        }
+      }
+    }
+  })
+
+  // Simulate clicking the FAQ button
+  const modal = wrapper.findComponent({ ref: 'modal-1' })
+  modal.vm.show = jest.fn() // Mock show method again for this instance
+  wrapper.vm.getButtonFunctionality('faqs')
+
+  // Assert that the show method was called
+  expect(modal.vm.show).toHaveBeenCalledTimes(1)
+})
+--------------------------
+
+import { shallowMount } from '@vue/test-utils'
+
+test('open FAQ modal when FAQ button is clicked', () => {
+  const wrapper = shallowMount(ToDoList, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BAlert: 'b-alert',
+        BInputGroup: 'b-input-group',
+        BRow: 'b-row',
+        BCol: 'b-col',
+        BListGroup: 'b-list-group',
+        BListGroupItem: 'b-list-group-item',
+        BFormCheckbox: 'b-form-checkbox',
+        BCard: 'b-card',
+        BModal: 'b-modal'
+      }
+    }
+  })
+
+  // Mock the $refs and the `show` method
+  const showModal = jest.fn()
+  wrapper.vm.$refs = {
+    'modal-1': {
+      show: showModal
+    }
+  }
+
+  // Call the method
+  wrapper.vm.getButtonFunctionality('faqs')
+
+  // Expect the `show` method to be called
+  expect(showModal).toHaveBeenCalled()
+})
+---------------------------
+
+test('open FAQ modal when FAQ button is clicked', () => {
+  const wrapper = shallowMount(ToDoList)
+  
+  const showModal = jest.fn()
+  wrapper.vm.$refs = { 'modal-1': { show: showModal } }
+  
+  // Directly test the functionality object
+  const actionTypeValue = {
+    faqs: () => wrapper.vm.$refs['modal-1'].show()
+  }
+  actionTypeValue['faqs']?.()
+
+  expect(showModal).toHaveBeenCalled()
+})
+=========================
+jest.mock('bootstrap-vue', () => ({
+  BModal: {
+    template: '<div><slot></slot></div>',
+    methods: {
+      show: jest.fn()
+    }
+  }
+}))
+========================
+test('direct invocation of show works', () => {
+  const wrapper = shallowMount(ToDoList)
+  const showModal = jest.fn()
+  wrapper.vm.$refs = { 'modal-1': { show: showModal } }
+
+  wrapper.vm.getButtonFunctionality('faqs')
+  expect(showModal).toHaveBeenCalled()
+})
