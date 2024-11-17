@@ -1,0 +1,243 @@
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from routes import puppy_bp, owner_bp
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///puppy_company.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Register Blueprints
+app.register_blueprint(puppy_bp, url_prefix="/puppies")
+app.register_blueprint(owner_bp, url_prefix="/owners")
+
+if __name__ == "__main__":
+    app.run(debug=True)
+----------------------------
+from app import db
+
+class Puppy(db.Model):
+    __tablename__ = 'puppies'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    breed = db.Column(db.String(50), nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owners.id'))
+
+    def __repr__(self):
+        return f"<Puppy {self.name}>"
+
+class Owner(db.Model):
+    __tablename__ = 'owners'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(15), nullable=False)
+    puppies = db.relationship('Puppy', backref='owner', lazy=True)
+
+    def __repr__(self):
+        return f"<Owner {self.name}>"
+-----------------------------
+from flask import Blueprint, request, jsonify
+from models import db, Puppy, Owner
+
+puppy_bp = Blueprint("puppy", __name__)
+owner_bp = Blueprint("owner", __name__)
+
+# Puppy Routes
+@puppy_bp.route("/", methods=["GET"])
+def get_puppies():
+    puppies = Puppy.query.all()
+    return jsonify([{
+        "id": puppy.id,
+        "name": puppy.name,
+        "breed": puppy.breed,
+        "age": puppy.age,
+        "owner": puppy.owner.name if puppy.owner else None
+    } for puppy in puppies])
+
+@puppy_bp.route("/", methods=["POST"])
+def add_puppy():
+    data = request.json
+    new_puppy = Puppy(name=data['name'], breed=data['breed'], age=data['age'])
+    db.session.add(new_puppy)
+    db.session.commit()
+    return jsonify({"message": "Puppy added successfully!"}), 201
+
+@puppy_bp.route("/<int:id>", methods=["DELETE"])
+def delete_puppy(id):
+    puppy = Puppy.query.get_or_404(id)
+    db.session.delete(puppy)
+    db.session.commit()
+    return jsonify({"message": "Puppy deleted successfully!"})
+
+@puppy_bp.route("/<int:id>/owner", methods=["PUT"])
+def update_owner(id):
+    data = request.json
+    puppy = Puppy.query.get_or_404(id)
+    puppy.owner_id = data['owner_id']
+    db.session.commit()
+    return jsonify({"message": "Owner updated successfully!"})
+
+# Owner Routes
+@owner_bp.route("/", methods=["POST"])
+def add_owner():
+    data = request.json
+    new_owner = Owner(name=data['name'], email=data['email'], phone=data['phone'])
+    db.session.add(new_owner)
+    db.session.commit()
+    return jsonify({"message": "Owner added successfully!"}), 201
+---------------------
+<template>
+  <div>
+    <Navbar />
+    <router-view />
+  </div>
+</template>
+
+<script>
+import Navbar from './components/Navbar.vue';
+
+export default {
+  components: { Navbar },
+};
+</script>
+-----------------------
+<template>
+  <b-navbar toggleable="lg" variant="dark" bg="primary">
+    <b-navbar-brand href="#">Puppy Company</b-navbar-brand>
+    <b-navbar-nav>
+      <b-nav-item href="/">Home</b-nav-item>
+      <b-nav-item href="/register">Register Puppy</b-nav-item>
+      <b-nav-item href="/list">List Puppies</b-nav-item>
+    </b-navbar-nav>
+  </b-navbar>
+</template>
+----------------------
+<template>
+  <b-container>
+    <b-form @submit.prevent="registerPuppy">
+      <b-form-group label="Name">
+        <b-form-input v-model="name" required></b-form-input>
+      </b-form-group>
+      <b-form-group label="Breed">
+        <b-form-input v-model="breed" required></b-form-input>
+      </b-form-group>
+      <b-form-group label="Age">
+        <b-form-input type="number" v-model="age" required></b-form-input>
+      </b-form-group>
+      <b-button type="submit" variant="primary">Register Puppy</b-button>
+    </b-form>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      name: '',
+      breed: '',
+      age: null,
+    };
+  },
+  methods: {
+    async registerPuppy() {
+      await fetch("http://localhost:5000/puppies/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: this.name, breed: this.breed, age: this.age }),
+      });
+      alert("Puppy registered!");
+      this.name = this.breed = '';
+      this.age = null;
+    },
+  },
+};
+</script>
+-----------------------------
+<template>
+  <b-container>
+    <b-table :items="puppies" :fields="fields" bordered>
+      <template #cell(actions)="data">
+        <b-button size="sm" variant="danger" @click="deletePuppy(data.item.id)">Delete</b-button>
+      </template>
+    </b-table>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      puppies: [],
+      fields: ["name", "breed", "age", "owner", "actions"],
+    };
+  },
+  async created() {
+    const response = await fetch("http://localhost:5000/puppies/");
+    this.puppies = await response.json();
+  },
+  methods: {
+    async deletePuppy(id) {
+      await fetch(`http://localhost:5000/puppies/${id}`, { method: "DELETE" });
+      this.puppies = this.puppies.filter(p => p.id !== id);
+    },
+  },
+};
+</script>
+-----------------------
+ERD Structure
+Users Table
+id (Primary Key)
+name (String)
+email (String)
+phone (String)
+password (String)
+role_id (Foreign Key referencing Roles.id)
+Puppies Table
+id (Primary Key)
+name (String)
+breed (String)
+age (Integer)
+posted_by (Foreign Key referencing Users.id)
+adopted_by (Foreign Key referencing Users.id)
+Roles Table
+id (Primary Key)
+-------------------
+Class Diagram Structure
+Classes
+User
+
+Attributes:
+id: Integer
+name: String
+email: String
+phone: String
+password: String
+role: Role (Relationship to Role)
+Methods:
+__init__(id, name, email, phone, password, role)
+__repr__()
+Role
+
+Attributes:
+id: Integer
+role_name: String (Values: "owner", "adopter")
+Methods:
+__init__(id, role_name)
+__repr__()
+Puppy
+
+Attributes:
+id: Integer
+name: String
+breed: String
+age: Integer
+posted_by: User (Relationship to User, role "owner")
+adopted_by: User (Relationship to User, role "adopter")
+Methods:
+__init__(id, name, breed, age, posted_by, adopted_by)
+__repr__()
