@@ -1,0 +1,441 @@
+Components:
+Frontend: Vue.js application
+Components:
+HomePage: Displays the welcome screen and navigation.
+PuppyList: Shows a table of puppies with details and actions.
+AddPuppy: Form for adding new puppies.
+UpdateOwner: Form for updating puppy ownership.
+API calls for:
+Fetching puppy data.
+Adding, updating, or deleting a puppy.
+Updating adoption status.
+Backend: Flask API
+Endpoints:
+/api/puppies (GET, POST, DELETE, PUT)
+/api/users (GET, POST, PUT)
+Handles database interactions and business logic.
+Database: PostgreSQL
+Tables:
+User_table
+Puppy_table
+Class Diagram
+The Class Diagram represents the key entities, their attributes, and methods.
+
+Classes:
+User
+
+Attributes:
+user_id: int
+user_name: string
+user_email: string
+user_password: string
+user_role: string
+Methods:
+register_user()
+update_user()
+Puppy
+
+Attributes:
+puppy_id: int
+puppy_name: string
+puppy_age: int
+puppy_breed: string
+puppy_gender: string
+adoption_status: boolean
+owned_by: int
+Methods:
+add_puppy()
+delete_puppy()
+update_puppy()
+fetch_puppy()
+Dataset Diagram
+The Dataset Diagram provides the structure of the database tables and their relationships.
+
+Tables:
+User_table
+
+user_id: int (PK)
+user_name: string
+user_email: string
+user_password: string
+user_role: string
+Puppy_table
+
+puppy_id: int (PK)
+puppy_name: string
+puppy_age: int
+puppy_breed: string
+puppy_gender: string
+adoption_status: boolean
+owned_by: int (FK -> User_table.user_id)
+---------------------------------------------
+
+Updated ERD:
+User_table
+Column Name	Type	Constraints
+user_id	int	Primary Key
+user_name	string	Not Null
+user_email	string	Unique, Not Null
+user_password	string	Not Null
+user_role	string	Check (e.g., "owner" or "adopter")
+Puppy_table
+Column Name	Type	Constraints
+puppy_id	int	Primary Key
+puppy_name	string	Not Null
+puppy_age	int	Not Null
+puppy_breed	string	Not Null
+puppy_gender	string	Optional
+adoption_status	boolean	Default False
+owned_by	int	Foreign Key -> User_table(user_id)
+
+-----
+
+<template>
+  <div>
+    <h2>Register</h2>
+    <form @submit.prevent="register">
+      <div>
+        <label for="user_name">Username</label>
+        <input type="text" v-model="user.name" id="user_name" required />
+      </div>
+      <div>
+        <label for="user_email">Email</label>
+        <input type="email" v-model="user.email" id="user_email" required />
+      </div>
+      <div>
+        <label for="user_password">Password</label>
+        <input type="password" v-model="user.password" id="user_password" required />
+      </div>
+      <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <router-link to="/login">Login here</router-link></p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      user: {
+        name: '',
+        email: '',
+        password: ''
+      }
+    };
+  },
+  methods: {
+    async register() {
+      try {
+        const response = await this.$axios.post('/api/register', this.user);
+        if (response.status === 201) {
+          alert('Registration successful!');
+          this.$router.push('/login');
+        }
+      } catch (error) {
+        console.error('Error registering:', error);
+        alert('Error registering');
+      }
+    }
+  }
+};
+</script>
+-------------------------------
+<template>
+  <div>
+    <h2>Login</h2>
+    <form @submit.prevent="login">
+      <div>
+        <label for="user_email">Email</label>
+        <input type="email" v-model="user.email" id="user_email" required />
+      </div>
+      <div>
+        <label for="user_password">Password</label>
+        <input type="password" v-model="user.password" id="user_password" required />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+    <p>Don't have an account? <router-link to="/register">Register here</router-link></p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      user: {
+        email: '',
+        password: ''
+      }
+    };
+  },
+  methods: {
+    async login() {
+      try {
+        const response = await this.$axios.post('/api/login', this.user);
+        if (response.status === 200) {
+          localStorage.setItem('user_id', response.data.user_id); // Store user ID for session
+          this.$router.push('/home');
+        }
+      } catch (error) {
+        console.error('Error logging in:', error);
+        alert('Invalid credentials');
+      }
+    }
+  }
+};
+</script>
+--------------------------------
+<template>
+  <div>
+    <h2>Welcome to Puppy Adoption</h2>
+    <button @click="goToPuppyList">View Puppies</button>
+    <button @click="goToAddPuppy">Add New Puppy</button>
+  </div>
+</template>
+
+<script>
+export default {
+  methods: {
+    goToPuppyList() {
+      this.$router.push('/puppylist');
+    },
+    goToAddPuppy() {
+      this.$router.push('/add-puppy');
+    }
+  }
+};
+</script>
+----------------------------------------
+<template>
+  <div>
+    <h2>Welcome to Puppy Adoption</h2>
+    <button @click="goToPuppyList">View Puppies</button>
+    <button @click="goToAddPuppy">Add New Puppy</button>
+  </div>
+</template>
+
+<script>
+export default {
+  methods: {
+    goToPuppyList() {
+      this.$router.push('/puppylist');
+    },
+    goToAddPuppy() {
+      this.$router.push('/add-puppy');
+    }
+  }
+};
+</script>
+----------------------------------
+<template>
+  <div>
+    <h2>Puppy List</h2>
+    <div>
+      <h3>Adopted Puppies</h3>
+      <ul>
+        <li v-for="puppy in adoptedPuppies" :key="puppy.puppy_id">
+          {{ puppy.puppy_name }} - {{ puppy.puppy_breed }} - {{ puppy.puppy_age }} years old
+        </li>
+      </ul>
+    </div>
+    <div>
+      <h3>Not Adopted Puppies</h3>
+      <ul>
+        <li v-for="puppy in availablePuppies" :key="puppy.puppy_id">
+          {{ puppy.puppy_name }} - {{ puppy.puppy_breed }} - {{ puppy.puppy_age }} years old
+          <button @click="adoptPuppy(puppy.puppy_id)">Adopt</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      adoptedPuppies: [],
+      availablePuppies: [],
+    };
+  },
+  created() {
+    this.fetchPuppies();
+  },
+  methods: {
+    async fetchPuppies() {
+      try {
+        const response = await this.$axios.get('/api/puppies');
+        const puppies = response.data.puppies;
+        this.adoptedPuppies = puppies.filter(puppy => puppy.adoption_status);
+        this.availablePuppies = puppies.filter(puppy => !puppy.adoption_status);
+      } catch (error) {
+        console.error('Error fetching puppies:', error);
+      }
+    },
+    async adoptPuppy(puppy_id) {
+      const user_id = localStorage.getItem('user_id');
+      try {
+        const response = await this.$axios.put(`/api/puppies/adopt/${puppy_id}`, { adopter_id: user_id });
+        if (response.status === 200) {
+          alert('Puppy adopted successfully!');
+          this.fetchPuppies(); // Refresh puppy list
+        }
+      } catch (error) {
+        console.error('Error adopting puppy:', error);
+      }
+    }
+  }
+};
+</script>
+---------------------
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_cors import CORS
+
+# Initialize the app, DB, and migration tool
+db = SQLAlchemy()
+migrate = Migrate()
+cors = CORS()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///puppy_company.db'  # Replace with your DB URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = 'your-secret-key'
+
+    db.init_app(app)
+    migrate.init_app(app, db)
+    cors.init_app(app)
+
+    # Register blueprints
+    from .auth import auth_bp
+    from .puppies import puppies_bp
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(puppies_bp)
+
+    return app
+---------------------------
+from . import db
+
+class User(db.Model):
+    __tablename__ = 'users'
+    user_id = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(100), nullable=False)
+    user_email = db.Column(db.String(100), unique=True, nullable=False)
+    user_password = db.Column(db.String(100), nullable=False)
+    user_role = db.Column(db.String(50), nullable=False)
+
+    # One-to-many relationship with puppies
+    puppies = db.relationship('Puppy', backref='owner', lazy=True)
+
+class Puppy(db.Model):
+    __tablename__ = 'puppies'
+    puppy_id = db.Column(db.Integer, primary_key=True)
+    puppy_name = db.Column(db.String(100), nullable=False)
+    puppy_breed = db.Column(db.String(100), nullable=False)
+    puppy_age = db.Column(db.Integer, nullable=False)
+    adoption_status = db.Column(db.Boolean, default=False)
+    owned_by = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=True)
+
+-----------------------------
+from flask import Blueprint, request, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
+from .models import db, User
+
+auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    user_name = data.get('user_name')
+    user_email = data.get('user_email')
+    user_password = data.get('user_password')
+    user_role = data.get('user_role', 'adopter')  # Default role is adopter
+
+    # Hash password
+    hashed_password = generate_password_hash(user_password)
+
+    new_user = User(user_name=user_name, user_email=user_email, user_password=hashed_password, user_role=user_role)
+    
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"message": "User registered successfully!"}), 201
+
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    user_email = data.get('user_email')
+    user_password = data.get('user_password')
+
+    user = User.query.filter_by(user_email=user_email).first()
+    if user and check_password_hash(user.user_password, user_password):
+        return jsonify({"message": "Login successful", "user_id": user.user_id}), 200
+    return jsonify({"message": "Invalid credentials"}), 401
+--------------------------
+from flask import Blueprint, request, jsonify
+from .models import db, Puppy, User
+
+puppies_bp = Blueprint('puppies', __name__, url_prefix='/api/puppies')
+
+# Fetch all puppies
+@puppies_bp.route('', methods=['GET'])
+def get_puppies():
+    puppies = Puppy.query.all()
+    puppies_list = [{
+        'puppy_id': puppy.puppy_id,
+        'puppy_name': puppy.puppy_name,
+        'puppy_breed': puppy.puppy_breed,
+        'puppy_age': puppy.puppy_age,
+        'adoption_status': puppy.adoption_status,
+        'owned_by': puppy.owned_by
+    } for puppy in puppies]
+    return jsonify({'puppies': puppies_list})
+
+# Add a new puppy
+@puppies_bp.route('', methods=['POST'])
+def add_puppy():
+    data = request.get_json()
+    puppy_name = data.get('puppy_name')
+    puppy_breed = data.get('puppy_breed')
+    puppy_age = data.get('puppy_age')
+    user_id = data.get('user_id')  # Owner ID
+    
+    new_puppy = Puppy(puppy_name=puppy_name, puppy_breed=puppy_breed, puppy_age=puppy_age, owned_by=user_id)
+    db.session.add(new_puppy)
+    db.session.commit()
+
+    return jsonify({"message": "Puppy added successfully!"}), 201
+
+# Update puppy adoption status (Adopt puppy)
+@puppies_bp.route('/adopt/<int:puppy_id>', methods=['PUT'])
+def adopt_puppy(puppy_id):
+    data = request.get_json()
+    adopter_id = data.get('adopter_id')
+
+    puppy = Puppy.query.get(puppy_id)
+    if puppy:
+        puppy.adoption_status = True
+        puppy.owned_by = adopter_id
+        db.session.commit()
+        return jsonify({"message": "Puppy adopted successfully!"}), 200
+    return jsonify({"message": "Puppy not found!"}), 404
+
+# Delete puppy
+@puppies_bp.route('/<int:puppy_id>', methods=['DELETE'])
+def delete_puppy(puppy_id):
+    puppy = Puppy.query.get(puppy_id)
+    if puppy:
+        db.session.delete(puppy)
+        db.session.commit()
+        return jsonify({"message": "Puppy deleted successfully!"}), 200
+    return jsonify({"message": "Puppy not found!"}), 404
+-----------------
+POST /api/auth/register: Register a new user.
+POST /api/auth/login: Login a user.
+GET /api/puppies: Get all puppies.
+POST /api/puppies: Add a new puppy.
+PUT /api/puppies/adopt/<puppy_id>: Adopt a puppy.
+DELETE /api/puppies/<puppy_id>: Delete a puppy.
