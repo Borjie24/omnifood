@@ -1,0 +1,130 @@
+changePassword() {
+  const user = JSON.parse(localStorage.getItem(this.username));
+
+  if (user) {
+    const email = prompt('Enter your email address:');
+    
+    // Check if user canceled the prompt
+    if (email === null) return;
+
+    if (email === user.email) {
+      const newPassword = prompt('Enter new password:');
+      
+      // Check if user canceled the new password prompt
+      if (newPassword === null) return;
+
+      const newPasswordValidation = newPassword.length >= 8 && newPassword.length <= 16;
+      const whitespace = newPassword.trim() === '';
+      const regex = /\s/;
+
+      if (newPasswordValidation && !whitespace && !regex.test(newPassword)) {
+        user.password = newPassword;
+        localStorage.setItem(this.username, JSON.stringify(user));
+        alert('Password updated successfully!');
+      } else {
+        alert('Password update failed. Password should be 8 to 16 characters only and not contain whitespace only. Please try again.');
+      }
+    } else {
+      alert('Email does not match the registered email.');
+    }
+  } else {
+    alert('User not found!');
+  }
+}
+-------------------------
+
+test('changePassword does not proceed if email is null', () => {
+  const mockRouter = { push: jest.fn() };
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view',
+      },
+      mocks: {
+        $router: mockRouter,
+      },
+    },
+    data() {
+      return {
+        username: 'SampleUser',
+        userEmail: '',
+      };
+    },
+  });
+
+  window.alert = jest.fn(); // Mock the alert call to prevent actual UI interaction
+
+  const mockUser = { email: 'test@example.com', password: 'oldPassword' };
+  localStorage.setItem('SampleUser', JSON.stringify(mockUser));
+
+  // Simulate the user canceling the prompt for email, which returns null
+  window.prompt = jest.fn().mockReturnValueOnce(null);
+
+  // Call the method
+  wrapper.vm.changePassword();
+
+  // Assert that further actions were not taken
+  const unchangedUser = JSON.parse(localStorage.getItem('SampleUser'));
+  expect(unchangedUser.password).toBe('oldPassword'); // Ensure password remains unchanged
+
+  // Assert that no alerts or prompts other than the initial one were called
+  expect(window.alert).not.toBeCalled();
+
+  localStorage.clear();
+});
+----------------------------------
+test('does not update username or call fetchUserEmail when username is not provided', () => {
+  const mockRouter = { push: jest.fn() }
+  const fetchUserEmailMock = jest.fn()
+  
+  const wrapper = shallowMount(App, {
+    global: {
+      components: {
+        BContainer: 'b-container',
+        BCard: 'b-card',
+        BCardText: 'b-card-text',
+        BNavbar: 'b-navbar',
+        BNavbarNav: 'b-navbar-nav',
+        BNavbarBrand: 'b-navbar-brand',
+        BNavbarToggle: 'b-navbar-toggle',
+        BCollapse: 'b-collapse',
+        BNavItemDropdown: 'b-nav-item-dropdown',
+        BDropdownItem: 'b-dropdown-item',
+        RouterView: 'router-view'
+      },
+      mocks: {
+        $router: mockRouter
+      }
+    },
+    data() {
+      return {
+        isLoggedIn: false,
+        username: 'InitialUser' // Pre-set a username to check if it stays unchanged
+      }
+    },
+    methods: {
+      fetchUserEmail: fetchUserEmailMock
+    }
+  })
+
+  // Call updateLoginStatus without providing a username
+  wrapper.vm.updateLoginStatus(true)
+
+  // Assertions
+  expect(wrapper.vm.isLoggedIn).toBe(true) // isLoggedIn should update
+  expect(wrapper.vm.username).toBe('InitialUser') // Username should remain unchanged
+  expect(fetchUserEmailMock).not.toHaveBeenCalled() // fetchUserEmail should not be called
+
+  wrapper.unmount()
+  localStorage.clear()
+})
