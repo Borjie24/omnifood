@@ -1,0 +1,42 @@
+from enum import Enum
+class GenderEnum(Enum):
+    MALE = 0
+    FEMALE = 1
+
+puppy_gender = db.Column(db.Enum(GenderEnum), nullable=False)
+-------------------------------
+
+from sqlalchemy_utils import EmailType
+user_email = db.Column(EmailType, nullable=False, unique=True)
+
+
+------------------------
+from flask_marshmallow.fields import fields
+from src.setup_db_example.schemas import ma
+from src.setup_db_example.models.m_user import UserDb
+from src.setup_db_example.models.m_puppy import PuppyDb
+
+class UserSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = UserDb
+        load_instance = True  # Ensures deserialization creates an instance of UserDb
+
+    user_id = fields.Integer()
+    user_name = fields.String()
+    user_email = fields.String()
+    user_address = fields.String()
+    puppies = fields.List(fields.Nested(lambda: PuppySchema(exclude=("user",))))  # Avoid circular references
+-------------------------------
+  class PuppySchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = PuppyDb
+        load_instance = True  # Ensures deserialization creates an instance of PuppyDb
+
+    puppy_id = fields.Integer()
+    puppy_name = fields.String()
+    puppy_birthdate = fields.Date()  # Corrected type
+    puppy_breed = fields.String()
+    puppy_gender = fields.Integer()
+    is_adopted = fields.Boolean()
+    owned_by_user_id = fields.Integer()
+    user = fields.Nested(UserSchema(exclude=("puppies",)), dump_only=True)  # Include owner info, but no cycles
