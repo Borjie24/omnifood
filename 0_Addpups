@@ -1,0 +1,81 @@
+<template>
+  <b-container>
+    <b-card title="Add Puppy for Adoption" class="mt-5">
+      <b-form @submit.prevent="addPuppy">
+        <b-form-group label="Puppy Name" label-for="puppy-name">
+          <b-form-input
+            id="puppy-name"
+            v-model="form.puppy_name"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Puppy Birthdate" label-for="puppy-birthdate">
+          <b-form-input
+            id="puppy-birthdate"
+            v-model="form.puppy_birthdate"
+            type="date"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Breed" label-for="puppy-breed">
+          <b-form-input
+            id="puppy-breed"
+            v-model="form.puppy_breed"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Gender" label-for="puppy-gender">
+          <b-form-select
+            id="puppy-gender"
+            v-model="form.puppy_gender"
+            :options="[{ value: 0, text: 'Female' }, { value: 1, text: 'Male' }]"
+            required
+          ></b-form-select>
+        </b-form-group>
+
+        <b-button type="submit" variant="success">Add Puppy</b-button>
+      </b-form>
+    </b-card>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      form: {
+        puppy_name: "",
+        puppy_birthdate: "",
+        puppy_breed: "",
+        puppy_gender: null,
+      },
+    };
+  },
+  methods: {
+    async addPuppy() {
+      try {
+        const userId = localStorage.getItem("userId");
+        const response = await fetch("/api/puppy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...this.form, owned_by_user_id: userId }),
+        });
+        if (response.ok) {
+          alert("Puppy added successfully!");
+          this.$router.push("/adoption-list");
+        } else {
+          alert("Failed to add puppy.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  },
+};
+</script>
+-----------------------
+<b-button variant="link" @click="$router.push('/adoption-list')">Adoption List</b-button>
+<b-button variant="link" @click="$router.push('/add-puppy')">Add New Puppy</b-button>
