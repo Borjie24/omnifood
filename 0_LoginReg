@@ -1,0 +1,130 @@
+<template>
+  <b-container>
+    <b-card title="Login" class="mt-5">
+      <b-form @submit.prevent="loginUser">
+        <b-form-group label="Email" label-for="email">
+          <b-form-input
+            id="email"
+            v-model="form.email"
+            type="email"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Password" label-for="password">
+          <b-form-input
+            id="password"
+            v-model="form.password"
+            type="password"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-button type="submit" variant="primary">Login</b-button>
+      </b-form>
+    </b-card>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      form: {
+        email: "",
+        password: "",
+      },
+    };
+  },
+  methods: {
+    async loginUser() {
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.form),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          localStorage.setItem("userId", result.user_id);
+          this.$router.push("/dashboard");
+        } else {
+          alert(result.error);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  },
+};
+</script>
+------------
+<template>
+  <b-container>
+    <b-card title="Register" class="mt-5">
+      <b-form @submit.prevent="registerUser">
+        <b-form-group label="Name" label-for="name">
+          <b-form-input
+            id="name"
+            v-model="form.name"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Email" label-for="email">
+          <b-form-input
+            id="email"
+            v-model="form.email"
+            type="email"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Password" label-for="password">
+          <b-form-input
+            id="password"
+            v-model="form.password"
+            type="password"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-button type="submit" variant="primary">Register</b-button>
+      </b-form>
+    </b-card>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      form: {
+        name: "",
+        email: "",
+        password: "",
+      },
+    };
+  },
+  methods: {
+    async registerUser() {
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.form),
+        });
+        const result = await response.json();
+        if (response.ok) {
+          alert("Registration successful!");
+          this.$router.push("/login");
+        } else {
+          alert(result.error);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  },
+};
+</script>
