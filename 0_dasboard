@@ -1,0 +1,138 @@
+<template>
+  <b-container>
+    <b-card title="Dashboard" class="mt-5">
+      <b-button variant="link" @click="$router.push('/adopted-puppies')">Adopted Puppies</b-button>
+      <b-button variant="link" @click="$router.push('/adoption-list')">Adoption List</b-button>
+    </b-card>
+  </b-container>
+</template>
+----------------
+<template>
+  <b-container>
+    <b-card title="Adopted Puppies" class="mt-5">
+      <b-list-group>
+        <b-list-group-item
+          v-for="puppy in adoptedPuppies"
+          :key="puppy.id"
+          class="d-flex justify-content-between align-items-center"
+        >
+          {{ puppy.puppy_name }}
+          <b-button variant="warning" @click="postForReadoption(puppy.id)">
+            Post for Readoption
+          </b-button>
+        </b-list-group-item>
+      </b-list-group>
+    </b-card>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      adoptedPuppies: [],
+    };
+  },
+  async created() {
+    const userId = localStorage.getItem("userId");
+    const response = await fetch(`/api/adopted-puppies/${userId}`);
+    this.adoptedPuppies = await response.json();
+  },
+  methods: {
+    async postForReadoption(puppyId) {
+      try {
+        const response = await fetch(`/api/puppy/relist/${puppyId}`, { method: "POST" });
+        if (response.ok) {
+          alert("Puppy has been posted for readoption!");
+          this.adoptedPuppies = this.adoptedPuppies.filter((puppy) => puppy.id !== puppyId);
+        } else {
+          alert("Failed to post for readoption.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  },
+};
+</script>
+---------------------------
+  <template>
+  <b-container>
+    <b-card title="Puppies Available for Adoption" class="mt-5">
+      <b-button variant="success" class="mb-3" @click="$router.push('/add-puppy')">
+        Add Puppy for Adoption
+      </b-button>
+      <b-list-group>
+        <b-list-group-item
+          v-for="puppy in puppies"
+          :key="puppy.id"
+          class="d-flex justify-content-between align-items-center"
+        >
+          {{ puppy.puppy_name }}
+          <div>
+            <b-button
+              v-if="puppy.owned_by_user_id === userId"
+              variant="danger"
+              @click="deletePuppy(puppy.id)"
+            >
+              Delete
+            </b-button>
+            <b-button
+              v-else
+              variant="primary"
+              @click="adoptPuppy(puppy.id)"
+            >
+              Adopt
+            </b-button>
+          </div>
+        </b-list-group-item>
+      </b-list-group>
+    </b-card>
+  </b-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      puppies: [],
+      userId: localStorage.getItem("userId"),
+    };
+  },
+  async created() {
+    const response = await fetch("/api/adoptable-puppies");
+    this.puppies = await response.json();
+  },
+  methods: {
+    async deletePuppy(puppyId) {
+      try {
+        const response = await fetch(`/api/puppy/${puppyId}`, { method: "DELETE" });
+        if (response.ok) {
+          this.puppies = this.puppies.filter((puppy) => puppy.id !== puppyId);
+        } else {
+          alert("Failed to delete puppy.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    async adoptPuppy(puppyId) {
+      try {
+        const response = await fetch(`/api/puppy/adopt/${puppyId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: this.userId }),
+        });
+        if (response.ok) {
+          alert("Puppy adopted successfully!");
+          this.puppies = this.puppies.filter((puppy) => puppy.id !== puppyId);
+        } else {
+          alert("Failed to adopt puppy.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  },
+};
+</script>
