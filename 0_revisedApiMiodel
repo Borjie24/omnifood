@@ -1,0 +1,110 @@
+@puppy_db_router.route("/api/puppy", methods=["POST"])
+def add_puppy():
+    data = request.get_json()
+    required_fields = ["puppy_name", "puppy_birthdate", "puppy_breed", "puppy_gender", "owned_by_user_id"]
+
+    if not all(field in data for field in required_fields):
+        return {"error": "Missing required fields"}, 400
+
+    try:
+        new_puppy = PuppyDb(
+            puppy_name=data["puppy_name"],
+            puppy_birthdate=data["puppy_birthdate"],
+            puppy_breed=data["puppy_breed"],
+            puppy_gender=data["puppy_gender"],
+            owned_by_user_id=data["owned_by_user_id"],
+            is_adopted=False,
+        )
+        db.session.add(new_puppy)
+        db.session.commit()
+        return {"message": "Puppy added successfully"}, 201
+    except Exception as e:
+        return {"error": str(e)}, 500
+-------------------------------
+@puppy_db_router.route("/api/adoptable-puppies", methods=["GET"])
+def list_adoptable_puppies():
+    current_user_id = request.args.get("user_id")
+    if not current_user_id:
+        return {"error": "User ID is required"}, 400
+
+    try:
+        adoptable_puppies = PuppyDb.query.filter_by(is_adopted=False).filter(
+            PuppyDb.owned_by_user_id != int(current_user_id)
+        ).all()
+        return {"puppies": [puppy.to_dict() for puppy in adoptable_puppies]}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+----------------------------
+@puppy_db_router.route("/api/puppy/<int:puppy_id>", methods=["DELETE"])
+def delete_puppy(puppy_id):
+    try:
+        puppy = PuppyDb.query.get(puppy_id)
+        if not puppy:
+            return {"error": "Puppy not found"}, 404
+
+        current_user_id = request.args.get("user_id")
+        if puppy.owned_by_user_id != int(current_user_id):
+            return {"error": "You can only delete your own puppies"}, 403
+
+        db.session.delete(puppy)
+        db.session.commit()
+        return {"message": "Puppy deleted successfully"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+----------------------------
+@puppy_db_router.route("/api/puppy/adopt/<int:puppy_id>", methods=["POST"])
+def adopt_puppy(puppy_id):
+    data = request.get_json()
+    user_id = data.get("user_id")
+    if not user_id:
+        return {"error": "User ID is required"}, 400
+
+    try:
+        puppy = PuppyDb.query.get(puppy_id)
+        if not puppy:
+            return {"error": "Puppy not found"}, 404
+
+        if puppy.is_adopted:
+            return {"error": "Puppy is already adopted"}, 400
+
+        puppy.is_adopted = True
+        puppy.owned_by_user_id = user_id
+        db.session.commit()
+        return {"message": "Puppy adopted successfully"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+----------------------------------
+@puppy_db_router.route("/api/puppy/relist/<int:puppy_id>", methods=["POST"])
+def relist_puppy(puppy_id):
+    data = request.get_json()
+    user_id = data.get("user_id")
+    if not user_id:
+        return {"error": "User ID is required"}, 400
+
+    try:
+        puppy = PuppyDb.query.get(puppy_id)
+        if not puppy:
+            return {"error": "Puppy not found"}, 404
+
+        if puppy.owned_by_user_id != int(user_id):
+            return {"error": "You can only relist puppies you own"}, 403
+
+        puppy.is_adopted = False
+        db.session.commit()
+        return {"message": "Puppy relisted for adoption"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+-------------------------
+class PuppyDb(db.Model):
+    # ... (other fields)
+
+    def to_dict(self):
+        return {
+            "puppy_id": self.puppy_id,
+            "puppy_name": self.puppy_name,
+            "puppy_birthdate": self.puppy_birthdate.strftime("%Y-%m-%d"),
+            "puppy_breed": self.puppy_breed,
+            "puppy_gender": self.puppy_gender,
+            "is_adopted": self.is_adopted,
+            "owned_by_user_id": self.owned_by_user_id,
+        }
