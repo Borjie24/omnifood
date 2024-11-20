@@ -54,3 +54,10 @@ def login_user():
 def list_puppies():
     puppies = PuppyDb.query.all()
     return jsonify(puppies_schema.dump(puppies)), 200
+
+
+from werkzeug.security import generate_password_hash, check_password_hash
+
+hashed_password = generate_password_hash(password, method='sha256')
+check_password_hash(hashed_password, password)
+
