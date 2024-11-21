@@ -1,0 +1,127 @@
+from flask import Blueprint, request, jsonify
+from src.setup_db_example.database import db
+from src.setup_db_example.models.m_puppy import PuppyDb
+import traceback
+
+puppy_db_router = Blueprint("puppy_api", __name__)
+
+@puppy_db_router.route("/api/get-sample", methods=["GET"])
+def sample_read():
+    return {
+        "message": "sample",
+    }
+
+@puppy_db_router.route("/api/puppies", methods=["GET"])
+def get_puppies():
+    try:
+        query = PuppyDb.query.all()
+        if not query:
+            return {
+                "success": False,
+                "message_response": "Empty Table",
+                "message_content": "No puppies found"
+            }, 404
+        
+        puppies = [info.get_dict() for info in query]  # Collect puppy data in a list
+        return {
+            "success": True,
+            "puppies": puppies
+        }, 200
+    except Exception as e:
+        print(traceback.format_exc())
+        return {
+            "success": False,
+            "message_response": "Error occurred while retrieving puppies",
+            "message_content": str(e)
+        }, 500
+
+@puppy_db_router.route("/api/puppy", methods=["POST"])
+def add_puppy():
+    req = request.json.get("params")
+    required_fields = ["name", "birthdate", "breed", "gender", "fee"]
+
+    # Validate required fields
+    if not req or not all(field in req and req[field] for field in required_fields):
+        return {
+            "success": False,
+            "message_response": "Validation Failed",
+            "message_content": "Missing or empty required fields"
+        }, 400
+
+    try:
+        # Extract and create new puppy data
+        name = req["name"]
+        birthdate = req["birthdate"]
+        breed = req["breed"]
+        gender = req["gender"]
+        fee = req["fee"]
+
+        new_puppy_data = PuppyDb(
+            puppy_name=name,
+            puppy_birthdate=birthdate,
+            puppy_breed=breed,
+            puppy_gender=gender,
+            puppy_fee=fee
+        )
+        db.session.add(new_puppy_data)
+        db.session.commit()
+        return {
+            "success": True,
+            "message_response": "PUPPY SUCCESSFULLY ADDED",
+            "message_content": "Puppy added"
+        }, 201
+    except Exception as e:
+        print(traceback.format_exc())
+        return {
+            "success": False,
+            "message_response": "PUPPY FAILED TO ADD",
+            "message_content": "Failed to add puppy"
+        }, 500
+--------------------------------
+
+<script>
+import { FetchAPI } from '@/utility/apiRequest'
+
+export default {
+  name: 'PuppyCompany',
+  data() {
+    return {
+      form: {
+        name: '',
+        birthdate: '',
+        breed: '',
+        gender: null,
+        fee: ''
+      }
+    }
+  },
+  methods: {
+    async addPuppy() {
+      try {
+        const api = new FetchAPI()
+        const response = await api.post('/api/puppy', { params: this.form })
+
+        if (response.success) {
+          alert('Puppy added successfully!')
+          // Clear all form inputs
+          this.resetForm()
+        } else {
+          alert('Failed to add puppy.')
+        }
+      } catch (err) {
+        console.error(err)
+        alert('An error occurred while adding the puppy.')
+      }
+    },
+    resetForm() {
+      this.form = {
+        name: '',
+        birthdate: '',
+        breed: '',
+        gender: null,
+        fee: ''
+      }
+    }
+  }
+}
+</script>
