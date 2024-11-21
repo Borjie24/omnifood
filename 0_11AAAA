@@ -1,0 +1,142 @@
+from flask import Blueprint, request, jsonify
+from datetime import datetime
+from src.setup_db_example.database import db
+from src.setup_db_example.models.m_puppy import PuppyDb
+from src.setup_db_example.models.m_adoption import AdoptionDb
+import traceback
+
+adoption_db_router = Blueprint("adoption_api", __name__)
+
+@adoption_db_router.route("/api/adopt", methods=["POST"])
+def adopt_puppy():
+    data = request.json
+    try:
+        puppy_id = data.get("puppy_id")
+        owner_name = data.get("owner_name")
+        owner_email = data.get("owner_email")
+        owner_address = data.get("owner_address")
+
+        # Validate input
+        if not all([puppy_id, owner_name, owner_email, owner_address]):
+            return jsonify({
+                "success": False,
+                "message_response": "Missing required fields for adoption."
+            }), 400
+
+        # Check if the puppy exists and is not already adopted
+        puppy = PuppyDb.query.filter_by(id=puppy_id).first()
+        if not puppy:
+            return jsonify({
+                "success": False,
+                "message_response": "Puppy not found."
+            }), 404
+        if puppy.is_adopted:
+            return jsonify({
+                "success": False,
+                "message_response": "Puppy is already adopted."
+            }), 400
+
+        # Add adoption details
+        adoption = AdoptionDb(
+            puppy_id=puppy_id,
+            owner_name=owner_name,
+            owner_email=owner_email,
+            owner_address=owner_address,
+            adoption_date=datetime.utcnow()
+        )
+        db.session.add(adoption)
+
+        # Update the puppy's status
+        puppy.is_adopted = True
+        puppy.adoption_date = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message_response": "Puppy adopted successfully!"
+        }), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "message_response": "An error occurred during adoption.",
+            "error": str(e)
+        }), 500
+---------------------------------
+@adoption_db_router.route("/api/puppies", methods=["GET"])
+def get_puppies():
+    try:
+        puppies = PuppyDb.query.all()
+        puppy_list = []
+        for puppy in puppies:
+            adoption = AdoptionDb.query.filter_by(puppy_id=puppy.id).first()
+            puppy_info = {
+                "id": puppy.id,
+                "name": puppy.puppy_name,
+                "birthdate": puppy.puppy_birthdate,
+                "breed": puppy.puppy_breed,
+                "gender": puppy.puppy_gender,
+                "fee": puppy.puppy_fee,
+                "adoptionDate": adoption.adoption_date if adoption else None,
+                "adopted": bool(adoption),
+                "ownedBy": adoption.owner_name if adoption else None,
+            }
+            puppy_list.append(puppy_info)
+
+        return jsonify({
+            "success": True,
+            "puppies": puppy_list
+        }), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "message_response": "Failed to fetch puppies.",
+            "error": str(e)
+        }), 500
+-----------------------------------------
+@adoption_db_router.route("/api/puppy/delete", methods=["POST"])
+def delete_puppy():
+    data = request.json
+    try:
+        puppy_id = data.get("id")
+
+        # Validate input
+        if not puppy_id:
+            return jsonify({
+                "success": False,
+                "message_response": "Puppy ID is required."
+            }), 400
+
+        # Check if the puppy exists
+        puppy = PuppyDb.query.filter_by(id=puppy_id).first()
+        if not puppy:
+            return jsonify({
+                "success": False,
+                "message_response": "Puppy not found."
+            }), 404
+
+        # Prevent deletion if puppy is adopted
+        if puppy.is_adopted:
+            return jsonify({
+                "success": False,
+                "message_response": "Cannot delete an adopted puppy."
+            }), 400
+
+        db.session.delete(puppy)
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message_response": "Puppy deleted successfully!"
+        }), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "message_response": "Failed to delete puppy.",
+            "error": str(e)
+        }), 500
