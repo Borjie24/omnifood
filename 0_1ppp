@@ -1,0 +1,166 @@
+<template>
+  <b-container>
+    <b-card title="Available Puppies for Adoption" class="mt-5">
+      <b-table striped hover :items="puppies" :fields="fields">
+        <template #cell(gender)="data">
+          <span>{{ data.item.gender === 1 ? "Male" : "Female" }}</span>
+        </template>
+        <template #cell(actions)="data">
+          <b-button
+            v-if="!data.item.adopted"
+            variant="primary"
+            class="mr-2"
+            @click="openAdoptionModal(data.item)"
+          >
+            Adopt Me
+          </b-button>
+          <b-button
+            v-else
+            variant="danger"
+            disabled
+          >
+            Adopted
+          </b-button>
+        </template>
+      </b-table>
+    </b-card>
+
+    <!-- Adoption Modal -->
+    <b-modal
+      id="adoption-modal"
+      ref="adoptionModal"
+      title="Adopt Puppy"
+      @hide="resetForm"
+    >
+      <b-form @submit.prevent="adoptPuppy">
+        <b-form-group label="Owner Name" label-for="owner-name">
+          <b-form-input
+            id="owner-name"
+            v-model="adoptionForm.ownerName"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Owner Email" label-for="owner-email">
+          <b-form-input
+            id="owner-email"
+            v-model="adoptionForm.ownerEmail"
+            type="email"
+            required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-form-group label="Owner Address" label-for="owner-address">
+          <b-form-textarea
+            id="owner-address"
+            v-model="adoptionForm.ownerAddress"
+            required
+          ></b-form-textarea>
+        </b-form-group>
+
+        <b-button type="submit" variant="success">Adopt</b-button>
+      </b-form>
+    </b-modal>
+  </b-container>
+</template>
+
+<script>
+import { FetchAPI } from "@/utility/apiRequest";
+
+export default {
+  name: "AdoptionManagement",
+  data() {
+    return {
+      puppies: [], // List of available puppies
+      selectedPuppy: null, // Currently selected puppy for adoption
+      adoptionForm: {
+        ownerName: "",
+        ownerEmail: "",
+        ownerAddress: ""
+      },
+      fields: [
+        { key: "name", label: "Name" },
+        { key: "birthdate", label: "Birthdate" },
+        { key: "breed", label: "Breed" },
+        { key: "gender", label: "Gender" },
+        { key: "fee", label: "Adoption Fee" },
+        { key: "adoptionDate", label: "Adoption Date" }, // New Field
+        { key: "actions", label: "Actions" }
+      ]
+    };
+  },
+  methods: {
+    async fetchPuppies() {
+      try {
+        const api = new FetchAPI();
+        const response = await api.get("/api/puppies");
+
+        if (response.success) {
+          this.puppies = response.puppies.map((puppy) => ({
+            ...puppy,
+            adopted: !!puppy.adoptionDate // Mark as adopted if adoptionDate exists
+          }));
+        } else {
+          alert("Failed to fetch puppies.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("An error occurred while fetching puppies.");
+      }
+    },
+    openAdoptionModal(puppy) {
+      this.selectedPuppy = puppy;
+      this.$refs.adoptionModal.show();
+    },
+    resetForm() {
+      this.adoptionForm = {
+        ownerName: "",
+        ownerEmail: "",
+        ownerAddress: ""
+      };
+      this.selectedPuppy = null;
+    },
+    async adoptPuppy() {
+      try {
+        const api = new FetchAPI();
+        const response = await api.post("/api/adopt", {
+          owner_name: this.adoptionForm.ownerName,
+          owner_email: this.adoptionForm.ownerEmail,
+          owner_address: this.adoptionForm.ownerAddress,
+          puppy_id: this.selectedPuppy.id
+        });
+
+        if (response.success) {
+          alert("Adoption successful!");
+          this.$refs.adoptionModal.hide();
+          this.fetchPuppies(); // Refresh the puppy list
+        } else {
+          alert(response.message_response || "Failed to adopt the puppy.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("An error occurred during the adoption process.");
+      }
+    },
+    async deletePuppy(puppyId) {
+      try {
+        const api = new FetchAPI();
+        const response = await api.post("/api/puppy/delete", { id: puppyId });
+
+        if (response.success) {
+          alert("Puppy deleted successfully.");
+          this.fetchPuppies(); // Refresh the list
+        } else {
+          alert(response.message_response || "Failed to delete the puppy.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("An error occurred while deleting the puppy.");
+      }
+    }
+  },
+  mounted() {
+    this.fetchPuppies(); // Fetch the available puppies on component mount
+  }
+};
+</script>
