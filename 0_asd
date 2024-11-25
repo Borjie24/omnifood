@@ -1,0 +1,61 @@
+from datetime import datetime
+from flask import Blueprint, request, jsonify
+from src.setup_db_example.database import db
+from src.setup_db_example.models.m_adoption import AdoptionDb, PuppyDb, OwnerDb
+
+adoption_blueprint = Blueprint('adoption', __name__)
+
+# Route to get owner by email
+@adoption_blueprint.route('/api/owner', methods=['GET'])
+def get_owner():
+    email = request.args.get('email')
+    owner = OwnerDb.query.filter_by(owner_email=email).first()
+    if owner:
+        return jsonify(success=True, data=owner.to_dict())
+    else:
+        return jsonify(success=False, message="Owner not found.")
+
+# Route to add owner
+@adoption_blueprint.route('/api/owner', methods=['POST'])
+def add_owner():
+    data = request.get_json()
+    new_owner = OwnerDb(
+        owner_name=data['name'],
+        owner_email=data['email'],
+        owner_address=data['address']
+    )
+    db.session.add(new_owner)
+    db.session.commit()
+    return jsonify(success=True, data=new_owner.to_dict())
+
+# Route to adopt a puppy
+@adoption_blueprint.route('/api/adopt', methods=['POST'])
+def adopt_puppy():
+    data = request.get_json()
+
+    # Check if puppy exists
+    puppy = PuppyDb.query.get(data['puppy_id'])
+    if not puppy:
+        return jsonify(success=False, message="Puppy not found.")
+
+    # Create adoption entry
+    adoption = AdoptionDb(
+        adoption_date=datetime.strptime(data['adoption_date'], '%Y-%m-%d'),
+        adopted_by=data['adopted_by'],
+        puppy_id=data['puppy_id']
+    )
+    db.session.add(adoption)
+    db.session.commit()
+
+    return jsonify(success=True, message="Puppy adopted successfully.")
+
+# Route to delete puppy
+@adoption_blueprint.route('/api/delete-puppy/<int:puppy_id>', methods=['DELETE'])
+def delete_puppy(puppy_id):
+    puppy = PuppyDb.query.get(puppy_id)
+    if puppy:
+        db.session.delete(puppy)
+        db.session.commit()
+        return jsonify(success=True, message="Puppy deleted.")
+    else:
+        return jsonify(success=False, message="Puppy not found.")
