@@ -1,0 +1,156 @@
+@adoption_db_router.route("/api/adopt-puppy/<int:puppy_id>", methods=["PUT"])
+def adopt_puppy(puppy_id):
+    """Update puppy with adoption details"""
+
+    try:
+        req = request.json["params"]
+        owner_name = req['name']
+        owner_email = req['email']
+        owner_address = req['address']
+        
+        # Find the puppy by its ID
+        puppy = PuppyDb.query.filter(PuppyDb.puppy_id == puppy_id).first()
+
+        if not puppy:
+            return {
+                "success": False,
+                "message_response": "Puppy Not Found",
+                "message_content": "No puppy with this ID was found."
+            }, 404
+        
+        # Update puppy's adoption details
+        puppy.adopted_by = owner_name
+        puppy.adopted_date = datetime.now()  # Set the current date and time as adoption date
+        
+        # Update the associated owner's details (you may want to add these to your db)
+        # Assuming owner is not yet saved, you may add this logic to save to ownerDb if needed
+        # new_owner_data = OwnerDb(owner_name=owner_name, owner_email=owner_email, owner_address=owner_address)
+        # db.session.add(new_owner_data)
+        
+        db.session.commit()
+
+        return {
+            "success": True,
+            "message_response": "Puppy Successfully Adopted",
+            "message_content": "The puppy adoption details were updated."
+        }, 200
+
+    except Exception as e:
+        print(traceback.format_exc())
+        return {
+            "success": False,
+            "message_response": "Adoption Failed",
+            "message_content": "Failed to update the adoption details"
+        }, 500
+--------------------------
+<!-- Add a new template to show owner details when clicked -->
+<template #cell(adoptedBy)="data">
+  <div>
+    <span>{{ data.item.adoptedBy || 'Not Adopted Yet' }}</span>
+    <b-button v-if="data.item.adoptedBy" variant="info" @click="showOwnerDetails(data.item)">
+      See Owner Details
+    </b-button>
+  </div>
+</template>
+
+<!-- Owner Details Modal/Card -->
+<b-modal v-model="showOwnerModal" title="Owner Details">
+  <b-card>
+    <b-card-text>
+      <p><strong>Name:</strong> {{ ownerDetails.name }}</p>
+      <p><strong>Email:</strong> {{ ownerDetails.email }}</p>
+      <p><strong>Address:</strong> {{ ownerDetails.address }}</p>
+    </b-card-text>
+  </b-card>
+</b-modal>
+
+------------------
+methods: {
+  async adoptPuppy(puppy) {
+    try {
+      const api = new FetchAPI()
+      const response = await api.put(`/api/adopt-puppy/${puppy.id}`, {
+        params: this.formOwner
+      })
+      if (response.success) {
+        this.fetchPuppies()  // Refresh the list after adoption
+        alert("Puppy adopted successfully!")
+        this.adoptionForm = false
+      } else {
+        alert("Failed to adopt puppy.")
+      }
+    } catch (err) {
+      console.error(err)
+      alert("An error occurred while adopting the puppy.")
+    }
+  },
+
+  showOwnerDetails(puppy) {
+    // Show the owner details in the modal
+    this.ownerDetails = {
+      name: puppy.adoptedBy,
+      email: puppy.adoptedEmail,  // Assuming `adoptedEmail` is sent from API if necessary
+      address: puppy.adoptedAddress // Assuming `adoptedAddress` exists
+    }
+    this.showOwnerModal = true
+  }
+}
+
+------------------------
+same 
+@adoption_db_router.route("/api/adopt-puppy/<int:puppy_id>", methods=["PUT"])
+def adopt_puppy(puppy_id):
+    """Update puppy with adoption details"""
+    try:
+        req = request.json["params"]
+        owner_name = req['name']
+        owner_email = req['email']
+        owner_address = req['address']
+
+        # Check if the owner already exists based on their email
+        existing_owner = OwnerDb.query.filter(OwnerDb.owner_email == owner_email).first()
+
+        if existing_owner:
+            # If owner exists, you can update their details
+            existing_owner.owner_name = owner_name
+            existing_owner.owner_address = owner_address
+        else:
+            # If the owner doesn't exist, create a new one
+            existing_owner = OwnerDb(
+                owner_name=owner_name,
+                owner_email=owner_email,
+                owner_address=owner_address
+            )
+            db.session.add(existing_owner)
+        
+        # Find the puppy by its ID
+        puppy = PuppyDb.query.filter(PuppyDb.puppy_id == puppy_id).first()
+
+        if not puppy:
+            return {
+                "success": False,
+                "message_response": "Puppy Not Found",
+                "message_content": "No puppy with this ID was found."
+            }, 404
+        
+        # Update puppy's adoption details
+        puppy.adopted_by = existing_owner.owner_id
+        puppy.adopted_date = datetime.now()  # Set the current date and time as adoption date
+
+        db.session.commit()
+
+        return {
+            "success": True,
+            "message_response": "Puppy Successfully Adopted",
+            "message_content": "The puppy adoption details were updated."
+        }, 200
+
+    except Exception as e:
+        print(traceback.format_exc())
+        return {
+            "success": False,
+            "message_response": "Adoption Failed",
+            "message_content": "Failed to update the adoption details"
+        }, 500
+
+
