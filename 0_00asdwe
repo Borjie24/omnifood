@@ -1,0 +1,205 @@
+<template>
+  <b-modal v-model="value" title="Adopt a Puppy">
+    <b-form @submit.prevent="adoptPuppy">
+      <b-form-group label="Owner Email" label-for="owner-email">
+        <b-form-input
+          id="owner-email"
+          v-model="owner.email"
+          placeholder="Enter Owner Email"
+          required
+        ></b-form-input>
+      </b-form-group>
+
+      <b-form-group label="Owner Name" label-for="owner-name">
+        <b-form-input
+          id="owner-name"
+          v-model="owner.name"
+          placeholder="Enter Owner Name"
+          required
+        ></b-form-input>
+      </b-form-group>
+
+      <b-form-group label="Owner Address" label-for="owner-address">
+        <b-form-input
+          id="owner-address"
+          v-model="owner.address"
+          placeholder="Enter Owner Address"
+          required
+        ></b-form-input>
+      </b-form-group>
+
+      <b-button type="submit" variant="success">Adopt Puppy</b-button>
+    </b-form>
+  </b-modal>
+</template>
+
+<script>
+import { FetchAPI } from '@/utility/apiRequest'
+
+export default {
+  name: 'OwnerAdoptionForm',
+  props: {
+    value: Boolean,
+    puppy: Object
+  },
+  data() {
+    return {
+      owner: {
+        name: '',
+        email: '',
+        address: ''
+      }
+    }
+  },
+  methods: {
+    async adoptPuppy() {
+      try {
+        const api = new FetchAPI()
+        
+        // Check if the owner exists
+        let response = await api.get(`/api/owner?email=${this.owner.email}`)
+        
+        if (response.success) {
+          // Owner exists, proceed with adoption
+          const ownerId = response.data.owner_id
+          const adoptionData = {
+            puppy_id: this.puppy.puppy_id,
+            adoption_date: new Date().toISOString().split('T')[0],
+            adopted_by: ownerId
+          }
+
+          response = await api.post('/api/adopt', adoptionData)
+          if (response.success) {
+            this.$emit('ownerAdded')
+            this.$emit('input', false) // Close the modal
+          } else {
+            alert('Failed to adopt puppy.')
+          }
+        } else {
+          // If owner doesn't exist, we can create a new one
+          const ownerData = { ...this.owner }
+          response = await api.post('/api/owner', ownerData)
+
+          if (response.success) {
+            // After creating new owner, proceed with adoption
+            const newOwnerId = response.data.owner_id
+            const adoptionData = {
+              puppy_id: this.puppy.puppy_id,
+              adoption_date: new Date().toISOString().split('T')[0],
+              adopted_by: newOwnerId
+            }
+
+            response = await api.post('/api/adopt', adoptionData)
+            if (response.success) {
+              this.$emit('ownerAdded')
+              this.$emit('input', false) // Close the modal
+            } else {
+              alert('Failed to adopt puppy.')
+            }
+          } else {
+            alert('Failed to create owner.')
+          }
+        }
+      } catch (err) {
+        console.error(err)
+        alert('An error occurred while adopting the puppy.')
+      }
+    }
+  }
+}
+</script>
+----------------------
+
+<template>
+  <b-container>
+    <AddPuppyForm @puppyAdded="fetchPuppies" />
+    <b-card title="Puppies for Adoption" class="mt-5">
+      <b-row>
+        <b-col v-for="puppy in puppies" :key="puppy.puppy_id" md="4">
+          <b-card :title="puppy.puppy_name" class="mb-3">
+            <b-card-text>
+              <p><strong>Breed:</strong> {{ puppy.puppy_breed }}</p>
+              <p><strong>Gender:</strong> {{ puppy.puppy_gender === 1 ? 'Female' : 'Male' }}</p>
+              <p><strong>Fee:</strong> ${{ puppy.puppy_fee }}</p>
+            </b-card-text>
+            <b-button-group>
+              <b-button variant="success" @click="openAdoptionForm(puppy)">Adopt</b-button>
+              <b-button variant="warning" @click="deletePuppy(puppy)">Delete</b-button>
+            </b-button-group>
+          </b-card>
+        </b-col>
+      </b-row>
+    </b-card>
+
+    <OwnerAdoptionForm
+      v-model="adoptionForm"
+      :puppy="selectedPuppy"
+      @ownerAdded="fetchPuppies"
+    />
+  </b-container>
+</template>
+
+<script>
+import { FetchAPI } from '@/utility/apiRequest'
+import AddPuppyForm from '@/components/AddPuppyForm.vue'
+import OwnerAdoptionForm from '@/components/OwnerAdoptionForm.vue'
+
+export default {
+  name: 'PuppyCompany',
+  components: {
+    AddPuppyForm,
+    OwnerAdoptionForm
+  },
+  data() {
+    return {
+      puppies: [],
+      selectedPuppy: null,
+      adoptionForm: false,
+      fields: [
+        { key: 'name', label: 'Name' },
+        { key: 'breed', label: 'Breed' },
+        { key: 'gender', label: 'Gender' },
+        { key: 'fee', label: 'Adoption Fee' },
+        { key: 'action', label: 'Action' }
+      ]
+    }
+  },
+  mounted() {
+    this.fetchPuppies()
+  },
+  methods: {
+    async fetchPuppies() {
+      try {
+        const api = new FetchAPI()
+        const response = await api.get('/api/puppies')
+        if (response.success) {
+          this.puppies = response.data
+        } else {
+          alert('Failed to fetch puppies.')
+        }
+      } catch (err) {
+        console.error(err)
+        alert('An error occurred while fetching puppies.')
+      }
+    },
+    async deletePuppy(puppy) {
+      try {
+        const api = new FetchAPI()
+        const response = await api.delete(`/api/delete-puppy/${puppy.puppy_id}`)
+        if (response.success) {
+          this.fetchPuppies()
+        } else {
+          alert('Failed to delete puppy.')
+        }
+      } catch (err) {
+        console.error(err)
+        alert('An error occurred while deleting puppy.')
+      }
+    },
+    openAdoptionForm(puppy) {
+      this.selectedPuppy = puppy
+      this.adoptionForm = true
+    }
+  }
+}
+</script>
