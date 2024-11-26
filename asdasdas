@@ -1,0 +1,89 @@
+<template>
+  <b-container>
+    <b-table
+      :items="puppies"
+      :fields="fields"
+      striped
+      hover
+      responsive
+      bordered
+    >
+      <!-- Slot for Adopted By Column -->
+      <template #cell(adoptedBy)="data">
+        <span>{{ data.item.adoptedBy ? data.item.adoptedBy : 'Not Adopted' }}</span>
+        <b-button
+          v-if="data.item.adoptedBy"
+          variant="info"
+          size="sm"
+          class="ml-2"
+          @click="showAdopterDetails(data.item)"
+        >
+          View Adopter Details
+        </b-button>
+      </template>
+    </b-table>
+  </b-container>
+</template>
+
+<script>
+import FetchAPI from "@/services/FetchAPI";
+
+export default {
+  data() {
+    return {
+      puppies: [],
+      fields: [
+        { key: "puppy_name", label: "Puppy Name" },
+        { key: "gender", label: "Gender" },
+        { key: "adoptedBy", label: "Adopted By" },
+        { key: "adoptedDate", label: "Adopted Date" },
+        { key: "action", label: "Actions" },
+      ],
+    };
+  },
+  methods: {
+    async fetchPuppies() {
+      try {
+        const api = new FetchAPI();
+        const response = await api.get("/api/puppies");
+        this.puppies = response.data.map((puppy) => ({
+          ...puppy,
+          adoptedDate: puppy.adoptedDate
+            ? new Date(puppy.adoptedDate).toLocaleDateString()
+            : "Not Adopted",
+        }));
+      } catch (err) {
+        console.error(err);
+        alert("Error fetching puppies.");
+      }
+    },
+    showAdopterDetails(puppy) {
+      // Replace this with actual logic to display adopter details (modal, etc.)
+      alert(`Adopter details for ${puppy.puppy_name}: ${puppy.adoptedBy}`);
+    },
+  },
+  mounted() {
+    this.fetchPuppies();
+  },
+};
+</script>
+
+<style scoped>
+.ml-2 {
+  margin-left: 0.5rem;
+}
+</style>
+--------------------------
+async fetchPuppies() {
+  try {
+    const api = new FetchAPI();
+    const response = await api.get('/api/puppies'); // Fetch puppies with additional fields
+    this.puppies = response.data.map(puppy => ({
+      ...puppy,
+      adoptedDate: puppy.adoptedDate ? new Date(puppy.adoptedDate).toLocaleDateString() : 'Not Adopted'
+    }));
+  } catch (err) {
+    console.error(err);
+    alert('Error fetching puppies.');
+  }
+}
