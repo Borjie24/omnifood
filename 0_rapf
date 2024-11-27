@@ -1,0 +1,224 @@
+<template>
+  <div>
+    <h2>Register</h2>
+    <form @submit.prevent="registerUser">
+      <input type="text" v-model="username" placeholder="Username" required />
+      <input type="email" v-model="email" placeholder="Email" required />
+      <input type="password" v-model="password" placeholder="Password" required />
+      <button type="submit">Register</button>
+    </form>
+    <p v-if="message">{{ message }}</p>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      username: '',
+      email: '',
+      password: '',
+      message: ''
+    };
+  },
+  methods: {
+    async registerUser() {
+      try {
+        const response = await axios.post('http://localhost:5000/register', {
+          username: this.username,
+          email: this.email,
+          password: this.password
+        });
+        this.message = response.data.message;
+      } catch (error) {
+        console.error(error);
+        this.message = 'Registration failed';
+      }
+    }
+  }
+};
+</script>
+-----------
+<template>
+  <div>
+    <h2>Login</h2>
+    <form @submit.prevent="loginUser">
+      <input type="text" v-model="username" placeholder="Username" required />
+      <input type="password" v-model="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+    <p v-if="message">{{ message }}</p>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      username: '',
+      password: '',
+      message: ''
+    };
+  },
+  methods: {
+    async loginUser() {
+      try {
+        const response = await axios.post('http://localhost:5000/login', {
+          username: this.username,
+          password: this.password
+        });
+        localStorage.setItem('token', response.data.access_token);
+        this.$router.push('/recipes');
+      } catch (error) {
+        console.error(error);
+        this.message = 'Login failed';
+      }
+    }
+  }
+};
+</script>
+-------------------
+<template>
+  <div>
+    <h2>Your Recipes</h2>
+    <div v-for="recipe in recipes" :key="recipe.id">
+      <h3>{{ recipe.title }}</h3>
+      <p><strong>Ingredients:</strong> {{ recipe.ingredients }}</p>
+      <p><strong>Instructions:</strong> {{ recipe.instructions }}</p>
+      <button @click="deleteRecipe(recipe.id)">Delete</button>
+      <router-link :to="`/recipes/${recipe.id}/edit`">Edit</router-link>
+    </div>
+    <router-link to="/recipes/new">Add New Recipe</router-link>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      recipes: []
+    };
+  },
+  async created() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5000/recipes', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      this.recipes = response.data;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  methods: {
+    async deleteRecipe(recipeId) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`http://localhost:5000/recipes/${recipeId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        this.recipes = this.recipes.filter(recipe => recipe.id !== recipeId);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+};
+</script>
+---------------
+<template>
+  <div>
+    <h2>{{ isEditing ? 'Edit' : 'Add' }} Recipe</h2>
+    <form @submit.prevent="submitRecipe">
+      <input type="text" v-model="title" placeholder="Title" required />
+      <textarea v-model="ingredients" placeholder="Ingredients" required></textarea>
+      <textarea v-model="instructions" placeholder="Instructions" required></textarea>
+      <button type="submit">{{ isEditing ? 'Update' : 'Add' }} Recipe</button>
+    </form>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+import { mapState } from 'vuex';
+
+export default {
+  props: ['recipeId'],
+  data() {
+    return {
+      title: '',
+      ingredients: '',
+      instructions: '',
+      isEditing: false
+    };
+  },
+  async created() {
+    if (this.recipeId) {
+      this.isEditing = true;
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://localhost:5000/recipes/${this.recipeId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const recipe = response.data;
+        this.title = recipe.title;
+        this.ingredients = recipe.ingredients;
+        this.instructions = recipe.instructions;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  },
+  methods: {
+    async submitRecipe() {
+      try {
+        const token = localStorage.getItem('token');
+        const data = {
+          title: this.title,
+          ingredients: this.ingredients,
+          instructions: this.instructions
+        };
+        
+        if (this.isEditing) {
+          await axios.put(`http://localhost:5000/recipes/${this.recipeId}`, data, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } else {
+          await axios.post('http://localhost:5000/recipes', data, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        }
+        this.$router.push('/recipes');
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+};
+</script>
+----------------------------
+import Vue from 'vue';
+import Router from 'vue-router';
+import Register from '@/components/Register.vue';
+import Login from '@/components/Login.vue';
+import RecipeList from '@/components/RecipeList.vue';
+import RecipeForm from '@/components/RecipeForm.vue';
+
+Vue.use(Router);
+
+export default new Router({
+  routes: [
+    { path: '/register', component: Register },
+    { path: '/login', component: Login },
+    { path: '/recipes', component: RecipeList },
+    { path: '/recipes/new', component: RecipeForm },
+    { path: '/recipes/:id/edit', component: RecipeForm, props: true }
+  ]
+});
+--------------------------
