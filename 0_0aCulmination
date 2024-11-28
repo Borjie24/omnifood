@@ -1,0 +1,120 @@
+<template>
+  <b-modal v-model="showModal" title="Add / Edit Recipe" @ok="submitForm">
+    <b-form @submit.prevent>
+      <b-form-group label="Recipe Name" label-for="name">
+        <b-form-input id="name" v-model="formData.name" required></b-form-input>
+      </b-form-group>
+      <b-form-group label="Description" label-for="description">
+        <b-form-textarea id="description" v-model="formData.description" required></b-form-textarea>
+      </b-form-group>
+      <b-form-group label="Ingredients" label-for="ingredient">
+        <b-form-textarea id="ingredient" v-model="formData.ingredient" required></b-form-textarea>
+      </b-form-group>
+      <b-form-group label="Instructions" label-for="instruction">
+        <b-form-textarea id="instruction" v-model="formData.instruction" required></b-form-textarea>
+      </b-form-group>
+    </b-form>
+  </b-modal>
+</template>
+
+<script>
+export default {
+  props: {
+    showModal: Boolean,
+    recipe: Object,
+  },
+  data() {
+    return {
+      formData: {
+        name: this.recipe?.name || "",
+        description: this.recipe?.description || "",
+        ingredient: this.recipe?.ingredient || "",
+        instruction: this.recipe?.instruction || "",
+      },
+    };
+  },
+  methods: {
+    submitForm() {
+      this.$emit("submit", this.formData);
+    },
+  },
+};
+</script>
+------------------------------
+<template>
+  <div>
+    <b-button variant="primary" class="mb-3" @click="showAddModal = true">Add Recipe</b-button>
+
+    <b-row>
+      <b-col v-for="recipe in recipes" :key="recipe.recipe_id" lg="4" md="6" sm="12">
+        <b-card :title="recipe.recipe_name" class="mb-3">
+          <b-card-text>{{ recipe.recipe_description }}</b-card-text>
+          <b-card-text><strong>Ingredients:</strong> {{ recipe.recipe_ingredient }}</b-card-text>
+          <b-card-text><strong>Instructions:</strong> {{ recipe.recipe_instruction }}</b-card-text>
+          <b-button variant="info" class="mr-2" @click="editRecipe(recipe)">Edit</b-button>
+          <b-button variant="danger" @click="deleteRecipe(recipe.recipe_id)">Delete</b-button>
+        </b-card>
+      </b-col>
+    </b-row>
+
+    <RecipeForm
+      :showModal.sync="showAddModal"
+      :recipe="selectedRecipe"
+      @submit="handleFormSubmit"
+    />
+  </div>
+</template>
+
+<script>
+import RecipeForm from "./RecipeForm.vue";
+import api from "../services/api";
+
+export default {
+  components: { RecipeForm },
+  data() {
+    return {
+      recipes: [],
+      showAddModal: false,
+      selectedRecipe: null,
+    };
+  },
+  methods: {
+    fetchRecipes() {
+      api.getRecipes().then((response) => {
+        if (response.data.success) {
+          this.recipes = response.data.data;
+        }
+      });
+    },
+    handleFormSubmit(data) {
+      if (this.selectedRecipe) {
+        // Edit recipe
+        api.editRecipe(this.selectedRecipe.recipe_id, data).then(() => {
+          this.fetchRecipes();
+          this.showAddModal = false;
+          this.selectedRecipe = null;
+        });
+      } else {
+        // Add recipe
+        api.addRecipe(data).then(() => {
+          this.fetchRecipes();
+          this.showAddModal = false;
+        });
+      }
+    },
+    deleteRecipe(recipeId) {
+      api.deleteRecipe(recipeId).then(() => {
+        this.fetchRecipes();
+      });
+    },
+    editRecipe(recipe) {
+      this.selectedRecipe = recipe;
+      this.showAddModal = true;
+    },
+  },
+  created() {
+    this.fetchRecipes();
+  },
+};
+</script>
+
