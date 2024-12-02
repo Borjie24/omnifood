@@ -1,0 +1,166 @@
+import { shallowMount } from '@vue/test-utils';
+import RecipeManager from '@/components/RecipeManager.vue'; // Adjust the path as needed
+import FetchAPI from '@/utility/apiRequest'; // Mock FetchAPI
+
+jest.mock('@/utility/apiRequest', () => {
+  return jest.fn().mockImplementation(() => ({
+    post: jest.fn(() => Promise.resolve({ success: true })),
+    get: jest.fn(() => Promise.resolve({ success: true, data: [] })),
+    delete: jest.fn(() => Promise.resolve({ success: true })),
+    put: jest.fn(() => Promise.resolve({ success: true, message_content: 'Updated successfully' })),
+  }));
+});
+
+describe('RecipeManager.vue', () => {
+  test('renders the correct header', () => {
+    const wrapper = shallowMount(RecipeManager);
+    expect(wrapper.find('h1').text()).toBe('Savor the flavors with incredible recipe!');
+  });
+
+  test('opens Add Recipe modal when button is clicked', async () => {
+    const wrapper = shallowMount(RecipeManager);
+    await wrapper.vm.openModal();
+    expect(wrapper.vm.showAddModal).toBe(true);
+  });
+
+  test('submits the Add Recipe form and updates recipes list', async () => {
+    const wrapper = shallowMount(RecipeManager);
+    wrapper.setData({
+      inputData: {
+        name: 'Test Recipe',
+        description: 'Test Description',
+        ingredient: 'Test Ingredient',
+        instruction: 'Test Instruction',
+      },
+    });
+
+    await wrapper.vm.addRecipe();
+    expect(FetchAPI).toHaveBeenCalledTimes(2); // One for post and one for fetchRecipe
+    expect(wrapper.vm.inputData.name).toBe('');
+    expect(wrapper.vm.showAddModal).toBe(false);
+  });
+
+  test('fetches recipes and displays them correctly', async () => {
+    const mockRecipes = [
+      { id: 1, name: 'Recipe 1', date: '2024-12-01' },
+      { id: 2, name: 'Recipe 2', date: '2024-12-02' },
+    ];
+
+    FetchAPI.mockImplementationOnce(() => ({
+      get: jest.fn(() => Promise.resolve({ success: true, data: mockRecipes })),
+    }));
+
+    const wrapper = shallowMount(RecipeManager);
+    await wrapper.vm.fetchRecipe();
+    expect(wrapper.vm.recipes).toEqual(mockRecipes);
+
+    // Since shallowMount doesn't render child components, check the data structure instead of DOM
+    expect(wrapper.vm.recipes.length).toBe(2);
+  });
+
+  test('deletes a recipe and updates the list', async () => {
+    const wrapper = shallowMount(RecipeManager);
+    wrapper.setData({
+      recipes: [
+        { id: 1, name: 'Recipe 1', date: '2024-12-01' },
+      ],
+    });
+
+    global.confirm = jest.fn(() => true); // Mock the confirm dialog
+    await wrapper.vm.deleteRecipe(1);
+
+    expect(FetchAPI).toHaveBeenCalledTimes(2); // One for delete and one for fetchRecipe
+    expect(wrapper.vm.recipes.length).toBe(0);
+  });
+
+  test('opens Edit Recipe modal and populates form', async () => {
+    const wrapper = shallowMount(RecipeManager);
+    const recipe = {
+      id: 1,
+      name: 'Recipe 1',
+      description: 'Description 1',
+      ingredient: 'Ingredient 1',
+      instruction: 'Instruction 1',
+    };
+
+    wrapper.setData({ recipes: [recipe], selectedRecipe: recipe });
+    wrapper.vm.editRecipe(recipe);
+    expect(wrapper.vm.showEditModal).toBe(true);
+    expect(wrapper.vm.editData.name).toBe(recipe.name);
+  });
+
+  test('updates a recipe and closes the modal', async () => {
+    const wrapper = shallowMount(RecipeManager);
+    wrapper.setData({
+      editData: {
+        name: 'Updated Recipe',
+        description: 'Updated Description',
+        ingredient: 'Updated Ingredient',
+        instruction: 'Updated Instruction',
+      },
+      selectedRecipe: { id: 1 },
+    });
+
+    await wrapper.vm.updateRecipe();
+    expect(FetchAPI).toHaveBeenCalledTimes(2); // One for put and one for fetchRecipe
+    expect(wrapper.vm.showEditModal).toBe(false);
+    expect(wrapper.vm.editData.name).toBe('');
+  });
+});
+
+---------------------------------------
+import { shallowMount } from '@vue/test-utils';
+import RecipeDetails from '@/components/RecipeDetails.vue'; // Adjust the path as needed
+
+describe('RecipeDetails.vue', () => {
+  test('renders all details passed via props correctly', () => {
+    const recipe = {
+      description: 'A delicious recipe description.',
+      ingredient: 'Flour, Sugar, Eggs',
+      instruction: 'Mix, bake, and serve.',
+    };
+
+    const wrapper = shallowMount(RecipeDetails, {
+      props: { details: recipe },
+    });
+
+    const detailItems = wrapper.findAll('b-card-text');
+
+    // Validate the count of rendered items
+    expect(detailItems.length).toBe(3);
+
+    // Validate each key-value pair rendering
+    expect(detailItems[0].text()).toBe('Recipe Description: A delicious recipe description.');
+    expect(detailItems[1].text()).toBe('Main Ingredients: Flour, Sugar, Eggs');
+    expect(detailItems[2].text()).toBe('Recipe Instruction: Mix, bake, and serve.');
+  });
+
+  test('renders empty values gracefully', () => {
+    const recipe = {
+      description: '',
+      ingredient: '',
+      instruction: '',
+    };
+
+    const wrapper = shallowMount(RecipeDetails, {
+      props: { details: recipe },
+    });
+
+    const detailItems = wrapper.findAll('b-card-text');
+
+    // Validate rendering with empty values
+    expect(detailItems[0].text()).toBe('Recipe Description: ');
+    expect(detailItems[1].text()).toBe('Main Ingredients: ');
+    expect(detailItems[2].text()).toBe('Recipe Instruction: ');
+  });
+
+  test('renders correctly when no props are passed (throws warning)', () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Attempt to mount without props
+    shallowMount(RecipeDetails);
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
+  });
+});
