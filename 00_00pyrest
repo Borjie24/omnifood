@@ -1,0 +1,112 @@
+import pytest
+from app import create_app, db
+from app.models import RecipeDb
+
+@pytest.fixture
+def client():
+    """Fixture for setting up the Flask test client and test database."""
+    app = create_app("testing")  # Replace with your app factory and test config
+    app_context = app.app_context()
+    app_context.push()
+    db.create_all()
+
+    yield app.test_client()
+
+    db.session.remove()
+    db.drop_all()
+    app_context.pop()
+
+
+def test_add_recipe(client):
+    """Test adding a new recipe."""
+    payload = {
+        "params": {
+            "name": "Test Recipe",
+            "description": "Test Description",
+            "ingredient": "Test Ingredients",
+            "instruction": "Test Instructions",
+        }
+    }
+
+    response = client.post("/api/recipe", json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert data["message_response"] == "NEW RECIPE IS SUCCESSFULLY ADDED"
+
+
+def test_get_recipes(client):
+    """Test fetching all recipes."""
+    # Add a recipe first
+    recipe = RecipeDb(
+        recipe_name="Test Recipe",
+        recipe_date_posted="2024-12-01",
+        recipe_description="Test Description",
+        recipe_ingredient="Test Ingredients",
+        recipe_instruction="Test Instructions",
+    )
+    db.session.add(recipe)
+    db.session.commit()
+
+    response = client.get("/api/recipes")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert len(data["data"]) == 1
+    assert data["data"][0]["name"] == "Test Recipe"
+
+
+def test_delete_recipe(client):
+    """Test deleting a recipe."""
+    # Add a recipe first
+    recipe = RecipeDb(
+        recipe_name="Test Recipe",
+        recipe_date_posted="2024-12-01",
+        recipe_description="Test Description",
+        recipe_ingredient="Test Ingredients",
+        recipe_instruction="Test Instructions",
+    )
+    db.session.add(recipe)
+    db.session.commit()
+
+    response = client.delete(f"/api/delete/{recipe.recipe_id}")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert data["message_response"] == "RECIPE IS SUCCESSFULLY DELETED"
+
+
+def test_update_recipe(client):
+    """Test updating a recipe."""
+    # Add a recipe first
+    recipe = RecipeDb(
+        recipe_name="Test Recipe",
+        recipe_date_posted="2024-12-01",
+        recipe_description="Test Description",
+        recipe_ingredient="Test Ingredients",
+        recipe_instruction="Test Instructions",
+    )
+    db.session.add(recipe)
+    db.session.commit()
+
+    payload = {
+        "params": {
+            "name": "Updated Recipe",
+            "description": "Updated Description",
+            "ingredient": "Updated Ingredients",
+            "instruction": "Updated Instructions",
+        }
+    }
+
+    response = client.put(f"/api/edit/{recipe.recipe_id}", json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert data["message"] == "RECIPE IS SUCCESSFULLY UPDATE"
+
+    # Verify the recipe was updated
+    updated_recipe = RecipeDb.query.get(recipe.recipe_id)
+    assert updated_recipe.recipe_name == "Updated Recipe"
+    assert updated_recipe.recipe_description == "Updated Description"
+    assert updated_recipe.recipe_ingredient == "Updated Ingredients"
+    assert updated_recipe.recipe_instruction == "Updated Instructions"
