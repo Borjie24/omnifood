@@ -1,0 +1,7 @@
+editFormData(data) {
+  // Ensure reactivity by creating a new object
+  this.editData = {
+    ...this.editData, // Spread the existing data
+    [data.key]: data.value // Update the specific field dynamically
+  };
+}
