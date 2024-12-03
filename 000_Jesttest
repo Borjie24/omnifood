@@ -1,0 +1,84 @@
+import { shallowMount } from '@vue/test-utils';
+import App from '@/App.vue';
+import SignInView from '@/components/pages/SignInView.vue';
+import SignUpView from '@/components/pages/SignUpView.vue';
+
+describe('App.vue', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallowMount(App, {
+      stubs: {
+        'sign-in-view': SignIn
+
+
+
+
+
+You said:
+ fetchUserEmail() {
+      const user = JSON.parse(localStorage.getItem(this.username))
+      if (user) {
+        this.userEmail = user.email || ''
+      }
+    },
+
+jest test this function
+ChatGPT said:
+ChatGPT
+To test the fetchUserEmail function using Jest, you can mock localStorage and verify that the function sets the correct value of userEmail based on the stored data.
+
+Here’s how you can write the test:
+
+Test Setup
+javascript
+Copy code
+import { shallowMount } from '@vue/test-utils';
+import App from '@/App.vue';
+
+describe('App.vue - fetchUserEmail()', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = shallowMount(App);
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+      },
+      writable: true,
+    });
+  });
+
+  it('sets userEmail correctly when user data exists in localStorage', () => {
+    // Mock data for localStorage
+    const mockUserData = { email: 'test@example.com' };
+    window.localStorage.getItem.mockReturnValueOnce(JSON.stringify(mockUserData));
+
+    // Set the username to test
+    wrapper.setData({ username: 'testUser' });
+
+    // Call fetchUserEmail method
+    wrapper.vm.fetchUserEmail();
+
+    // Assertions
+    expect(window.localStorage.getItem).toHaveBeenCalledWith('testUser');
+    expect(wrapper.vm.userEmail).toBe('test@example.com');
+  });
+
+  it('sets userEmail to an empty string when no user data exists', () => {
+    // Mock data for localStorage
+    window.localStorage.getItem.mockReturnValueOnce(null);
+
+    // Set the username to test
+    wrapper.setData({ username: 'testUser' });
+
+    // Call fetchUserEmail method
+    wrapper.vm.fetchUserEmail();
+
+    // Assertions
+    expect(window.localStorage.getItem).toHaveBeenCalledWith('testUser');
+    expect(wrapper.vm.userEmail).toBe('');
+  });
+});
