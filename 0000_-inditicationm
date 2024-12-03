@@ -1,0 +1,97 @@
+<template>
+  <b-form @submit.prevent="updateRecipe">
+    <div v-for="(item, index) in itemsEdit" :key="index">
+      <component
+        :is="item.componentName"
+        :value="editData[item.data.saveAs]" <!-- Bind the value dynamically -->
+        :directives="item.directives"
+        :data="item.data"
+        @change="updateField(item.data.saveAs, $event)" <!-- Update field on change -->
+      >
+        {{ item.display.label }}
+      </component>
+    </div>
+  </b-form>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      editData: {
+        name: "",
+        description: "",
+        ingredient: "",
+        instruction: "",
+      },
+      selectedRecipe: null, // The selected recipe to edit
+      itemsEdit: [
+        {
+          componentName: "CommonTextInput",
+          data: { saveAs: "name" },
+          directives: { type: "text", placeholder: "Recipe Name", class: "mb-2" },
+          display: { label: "Recipe Name" },
+        },
+        {
+          componentName: "CommonTextArea",
+          data: { saveAs: "description" },
+          directives: {
+            placeholder: "Recipe Description",
+            row: 3,
+            class: "mb-2",
+          },
+          display: { label: "Recipe Description" },
+        },
+        {
+          componentName: "CommonTextArea",
+          data: { saveAs: "ingredient" },
+          directives: {
+            placeholder: "Main Ingredients",
+            row: 3,
+            class: "mb-2",
+          },
+          display: { label: "Main Ingredients" },
+        },
+        {
+          componentName: "CommonTextArea",
+          data: { saveAs: "instruction" },
+          directives: {
+            placeholder: "Recipe Instructions",
+            row: 3,
+            class: "mb-2",
+          },
+          display: { label: "Recipe Instructions" },
+        },
+      ],
+    };
+  },
+  methods: {
+    // Dynamically updates the editData object fields
+    updateField(key, value) {
+      this.$set(this.editData, key, value);
+    },
+    // Fetches details of the selected recipe and populates editData
+    getRecipeDetails() {
+      if (this.selectedRecipe) {
+        this.editData.name = this.selectedRecipe.name;
+        this.editData.description = this.selectedRecipe.description;
+        this.editData.ingredient = this.selectedRecipe.ingredient;
+        this.editData.instruction = this.selectedRecipe.instruction;
+      }
+    },
+    // Handles form submission and logs or processes the updated recipe
+    updateRecipe() {
+      console.log("Updated Recipe:", this.editData);
+      // Save the updated recipe logic goes here
+    },
+  },
+  mounted() {
+    // Fetch the details when the component is mounted
+    this.getRecipeDetails();
+  },
+};
+</script>
+
+<style>
+/* Optional custom styling */
+</style>
