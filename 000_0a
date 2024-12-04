@@ -1,0 +1,74 @@
+test('registerUser gracefully handles errors in try-catch', () => {
+  const wrapper = shallowMount(SignUpView, {
+    global: {
+      components: {
+        BForm: 'b-form',
+        BFormGroup: 'b-form-group',
+        BFormInput: 'b-form-input',
+        BFormText: 'b-form-text',
+        BButton: 'b-button'
+      }
+    }
+  });
+
+  // Mock localStorage to throw an error
+  const originalGetItem = localStorage.getItem; // Save original implementation
+  jest.spyOn(localStorage, 'getItem').mockImplementation(() => {
+    throw new Error('Simulated localStorage error');
+  });
+
+  wrapper.setData({
+    username: 'newuser',
+    email: 'newuser@email.com',
+    password: 'password123',
+    confirmPassword: 'password123'
+  });
+
+  expect(() => {
+    wrapper.vm.registerUser();
+  }).not.toThrow(); // Ensure the method does not throw an error
+
+  expect(wrapper.vm.messageEmail).toBe(''); // Ensure no email-related error is set
+  expect(wrapper.vm.message).toBe(''); // Ensure no general message is set
+
+  // Restore the original localStorage behavior
+  localStorage.getItem = originalGetItem;
+});
+---------------------------------
+test('registerUser gracefully handles errors in catch block', () => {
+  const wrapper = shallowMount(SignUpView, {
+    global: {
+      components: {
+        BForm: 'b-form',
+        BFormGroup: 'b-form-group',
+        BFormInput: 'b-form-input',
+        BFormText: 'b-form-text',
+        BButton: 'b-button'
+      }
+    }
+  });
+
+  // Mock localStorage.key to throw an error
+  const originalKey = localStorage.key; // Save original implementation
+  jest.spyOn(localStorage, 'key').mockImplementation(() => {
+    throw new Error('Simulated localStorage error in key');
+  });
+
+  wrapper.setData({
+    username: 'newuser',
+    email: 'newuser@email.com',
+    password: 'password123',
+    confirmPassword: 'password123'
+  });
+
+  expect(() => {
+    wrapper.vm.registerUser();
+  }).not.toThrow(); // Ensure no error is thrown outside the method
+
+  expect(wrapper.vm.messageEmail).toBe(''); // Ensure no email error message is set
+  expect(wrapper.vm.message).toBe(''); // Ensure no general error message is set
+
+  // Restore the original localStorage behavior
+  localStorage.key = originalKey;
+});
+----------------------------------------
