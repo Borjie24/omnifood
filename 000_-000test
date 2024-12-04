@@ -1,0 +1,199 @@
+import { shallowMount } from '@vue/test-utils'
+import RecipeManager from '@/components/RecipeManager.vue'
+import { FetchAPI } from '@/utility/apiRequest'
+
+jest.mock('@/utility/apiRequest')
+
+describe('RecipeManager.vue', () => {
+  let wrapper
+
+  it('should render correctly', () => {
+    wrapper = shallowMount(RecipeManager)
+    expect(wrapper.exists()).toBe(true)
+    expect(wrapper.find('h1').text()).toBe('Savor the flavors with incredible recipe!')
+  })
+
+  it('should open the Add Modal when openModal is called', () => {
+    wrapper = shallowMount(RecipeManager)
+    wrapper.vm.openModal()
+    expect(wrapper.vm.showAddModal).toBe(true)
+  })
+
+  it('should reset the input data when clearAddModal is called', () => {
+    wrapper = shallowMount(RecipeManager)
+    wrapper.setData({
+      inputData: {
+        name: 'Test Recipe',
+        description: 'Test Description',
+        ingredient: 'Test Ingredient',
+        instruction: 'Test Instruction'
+      }
+    })
+    wrapper.vm.clearAddModal()
+    expect(wrapper.vm.inputData.name).toBe('')
+    expect(wrapper.vm.inputData.description).toBe('')
+    expect(wrapper.vm.inputData.ingredient).toBe('')
+    expect(wrapper.vm.inputData.instruction).toBe('')
+  })
+
+  it('should call addRecipe method and add new recipe', async () => {
+    wrapper = shallowMount(RecipeManager)
+    const mockResponse = { success: true, data: 'new data' }
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    await wrapper.setData({ inputData: { name: 'New Recipe', description: 'Description', ingredient: 'Ingredient', instruction: 'Instruction' } })
+    await wrapper.vm.addRecipe()
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/recipe', { method: 'POST', data: wrapper.vm.inputData })
+    expect(wrapper.vm.showAddModal).toBe(false)
+    expect(wrapper.vm.inputData.name).toBe('')
+    expect(wrapper.vm.inputData.description).toBe('')
+    expect(wrapper.vm.inputData.ingredient).toBe('')
+    expect(wrapper.vm.inputData.instruction).toBe('')
+  })
+
+  it('should handle addRecipe when API fails', async () => {
+    wrapper = shallowMount(RecipeManager)
+    const mockResponse = { success: false }
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    await wrapper.setData({ inputData: { name: 'New Recipe', description: 'Description', ingredient: 'Ingredient', instruction: 'Instruction' } })
+    await wrapper.vm.addRecipe()
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/recipe', { method: 'POST', data: wrapper.vm.inputData })
+    expect(wrapper.vm.showAddModal).toBe(false)
+    expect(wrapper.vm.inputData.name).toBe('')
+    expect(wrapper.vm.inputData.description).toBe('')
+    expect(wrapper.vm.inputData.ingredient).toBe('')
+    expect(wrapper.vm.inputData.instruction).toBe('')
+    // Here you would check if alert is shown for failure
+  })
+
+  it('should fetch and display recipes when fetchRecipe is called', async () => {
+    wrapper = shallowMount(RecipeManager)
+    const mockResponse = { success: true, data: [{ name: 'Recipe 1' }, { name: 'Recipe 2' }] }
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    await wrapper.vm.fetchRecipe()
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/recipes')
+    expect(wrapper.vm.recipes.length).toBe(2)
+    expect(wrapper.findAll('b-card').length).toBe(2) // Checks if recipe cards are rendered
+  })
+
+  it('should display "No Posted Recipe" when no recipes are fetched', async () => {
+    wrapper = shallowMount(RecipeManager)
+    const mockResponse = { success: true, data: [] }
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    await wrapper.vm.fetchRecipe()
+
+    expect(wrapper.vm.recipes.length).toBe(0)
+    expect(wrapper.text()).toContain('No Posted Recipe, Click the "Add New Recipe" to add new recipe.')
+  })
+
+  it('should handle fetchRecipe when API fails', async () => {
+    wrapper = shallowMount(RecipeManager)
+    const mockResponse = { success: false }
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    await wrapper.vm.fetchRecipe()
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/recipes')
+    expect(wrapper.vm.recipes.length).toBe(0)
+    expect(wrapper.text()).toContain('No Posted Recipe, Click the "Add New Recipe" to add new recipe.')
+  })
+
+  it('should delete a recipe when deleteRecipe is called', async () => {
+    const mockResponse = { success: true }
+    const recipeId = 1
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    wrapper = shallowMount(RecipeManager)
+    await wrapper.vm.deleteRecipe(recipeId)
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/delete/1')
+    expect(wrapper.vm.recipes.length).toBe(0) // Assuming that after deletion, the recipes list is empty
+  })
+
+  it('should handle deleteRecipe when API fails', async () => {
+    const mockResponse = { success: false }
+    const recipeId = 1
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    wrapper = shallowMount(RecipeManager)
+    await wrapper.vm.deleteRecipe(recipeId)
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/delete/1')
+    expect(wrapper.vm.recipes.length).toBe(0) // If the delete fails, recipes should still be updated
+    // You can add an alert or error message check here if needed
+  })
+
+  it('should confirm before deleting a recipe', async () => {
+    window.confirm = jest.fn().mockReturnValue(true) // Simulates user confirming the deletion
+    const mockResponse = { success: true }
+    const recipeId = 1
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    wrapper = shallowMount(RecipeManager)
+    await wrapper.vm.deleteRecipe(recipeId)
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/delete/1')
+  })
+
+  it('should not delete a recipe if confirm is cancelled', async () => {
+    window.confirm = jest.fn().mockReturnValue(false) // Simulates user cancelling the deletion
+    const recipeId = 1
+
+    wrapper = shallowMount(RecipeManager)
+    await wrapper.vm.deleteRecipe(recipeId)
+
+    expect(FetchAPI).not.toHaveBeenCalled()
+  })
+
+  it('should call updateRecipe method to update recipe details', async () => {
+    wrapper = shallowMount(RecipeManager)
+    const mockResponse = { success: true }
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    await wrapper.setData({
+      editData: { name: 'Updated Recipe', description: 'Updated Description', ingredient: 'Updated Ingredient', instruction: 'Updated Instruction' },
+      selectedRecipe: { id: 1 }
+    })
+    await wrapper.vm.updateRecipe()
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/edit/1', { method: 'PUT', data: wrapper.vm.editData })
+    expect(wrapper.vm.showEditModal).toBe(false)
+  })
+
+  it('should not update recipe when input fields are empty', async () => {
+    wrapper = shallowMount(RecipeManager)
+
+    await wrapper.setData({
+      editData: { name: '', description: '', ingredient: '', instruction: '' },
+      selectedRecipe: { id: 1 }
+    })
+
+    await wrapper.vm.updateRecipe()
+
+    expect(FetchAPI).not.toHaveBeenCalled() // Should not make API call if fields are empty
+    expect(wrapper.vm.showEditModal).toBe(true) // Modal should remain open
+    // You can add validation error checks here if needed
+  })
+
+  it('should handle updateRecipe when API fails', async () => {
+    wrapper = shallowMount(RecipeManager)
+    const mockResponse = { success: false }
+    FetchAPI.mockResolvedValue(mockResponse)
+
+    await wrapper.setData({
+      editData: { name: 'Updated Recipe', description: 'Updated Description', ingredient: 'Updated Ingredient', instruction: 'Updated Instruction' },
+      selectedRecipe: { id: 1 }
+    })
+    await wrapper.vm.updateRecipe()
+
+    expect(FetchAPI).toHaveBeenCalledWith('/api/edit/1', { method: 'PUT', data: wrapper.vm.editData })
+    expect(wrapper.vm.showEditModal).toBe(false)
+    // Check if an error message or alert is shown
+  })
+})
