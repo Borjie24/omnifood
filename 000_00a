@@ -134,3 +134,48 @@ describe('CommonTextInput.vue', () => {
   })
 })
 
+-----------------------
+import { shallowMount } from '@vue/test-utils'
+import App from '@/App.vue'
+
+describe('App.vue - fetchUserEmail Method', () => {
+  test('fetches user email and sets userEmail when user exists in localStorage', () => {
+    const mockUser = { email: 'test@example.com' }
+    const mockUsername = 'testUser'
+    localStorage.setItem(mockUsername, JSON.stringify(mockUser))
+
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          username: mockUsername,
+          userEmail: ''
+        }
+      }
+    })
+
+    wrapper.vm.fetchUserEmail()
+    expect(wrapper.vm.userEmail).toBe('test@example.com')
+
+    // Clean up
+    localStorage.removeItem(mockUsername)
+  })
+
+  test('does not set userEmail when user does not exist in localStorage', () => {
+    const mockUsername = 'nonExistentUser'
+    localStorage.removeItem(mockUsername) // Ensure the user doesn't exist
+
+    const wrapper = shallowMount(App, {
+      data() {
+        return {
+          username: mockUsername,
+          userEmail: ''
+        }
+      }
+    })
+
+    wrapper.vm.fetchUserEmail()
+    expect(wrapper.vm.userEmail).toBe('') // userEmail remains empty
+  })
+})
+
+
