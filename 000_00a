@@ -72,3 +72,65 @@ test('registerUser gracefully handles errors in catch block', () => {
   localStorage.key = originalKey;
 });
 ----------------------------------------
+import { shallowMount } from '@vue/test-utils'
+import CommonTextInput from '@/components/CommonTextInput.vue'
+
+describe('CommonTextInput.vue', () => {
+  it('sets textInputData to initial value of currentValue', () => {
+    const input = {
+      directives: { class: 'custom-input', type: 'text' },
+      data: { saveAs: 'inputValue' }
+    }
+
+    const wrapper = shallowMount(CommonTextInput, {
+      propsData: { 
+        input, 
+        currentValue: 'Initial Value' 
+      }
+    })
+
+    expect(wrapper.vm.textInputData).toBe('Initial Value') // Ensure the initial value is set
+  })
+
+  it('updates textInputData when currentValue changes', async () => {
+    const input = {
+      directives: { class: 'custom-input', type: 'text' },
+      data: { saveAs: 'inputValue' }
+    }
+
+    const wrapper = shallowMount(CommonTextInput, {
+      propsData: { 
+        input, 
+        currentValue: 'Initial Value' 
+      }
+    })
+
+    // Simulate changing currentValue prop
+    await wrapper.setProps({ currentValue: 'Updated Value' })
+
+    expect(wrapper.vm.textInputData).toBe('Updated Value') // Ensure the watch updates textInputData
+  })
+
+  it('sets textInputData to empty string if currentValue is null or undefined', async () => {
+    const input = {
+      directives: { class: 'custom-input', type: 'text' },
+      data: { saveAs: 'inputValue' }
+    }
+
+    const wrapper = shallowMount(CommonTextInput, {
+      propsData: { 
+        input, 
+        currentValue: 'Initial Value' 
+      }
+    })
+
+    // Simulate currentValue being set to null
+    await wrapper.setProps({ currentValue: null })
+    expect(wrapper.vm.textInputData).toBe('')
+
+    // Simulate currentValue being set to undefined
+    await wrapper.setProps({ currentValue: undefined })
+    expect(wrapper.vm.textInputData).toBe('')
+  })
+})
+
