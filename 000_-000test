@@ -197,3 +197,112 @@ describe('RecipeManager.vue', () => {
     // Check if an error message or alert is shown
   })
 })
+----------------------
+import { shallowMount } from '@vue/test-utils'
+import RecipeDetails from '@/components/RecipeDetails.vue'
+
+describe('RecipeDetails.vue', () => {
+  it('renders recipe details correctly when valid data is passed', () => {
+    // Mount the component with valid data
+    const wrapper = shallowMount(RecipeDetails, {
+      propsData: {
+        details: {
+          description: 'Delicious recipe',
+          ingredient: 'Tomato, Onion, Garlic',
+          instruction: 'Chop and cook the ingredients'
+        }
+      }
+    })
+
+    // Check if the component exists
+    expect(wrapper.exists()).toBe(true)
+
+    // Verify that each key-value pair is correctly rendered
+    expect(wrapper.text()).toContain('Recipe Description: Delicious recipe')
+    expect(wrapper.text()).toContain('Main Ingredients: Tomato, Onion, Garlic')
+    expect(wrapper.text()).toContain('Recipe Instruction: Chop and cook the ingredients')
+  })
+
+  it('handles empty description field correctly', () => {
+    // Mount the component with an empty description
+    const wrapper = shallowMount(RecipeDetails, {
+      propsData: {
+        details: {
+          description: '',
+          ingredient: 'Tomato, Onion, Garlic',
+          instruction: 'Chop and cook the ingredients'
+        }
+      }
+    })
+
+    // Check that the description field is rendered with an empty value
+    expect(wrapper.text()).toContain('Recipe Description: ')
+  })
+
+  it('handles empty ingredient field correctly', () => {
+    // Mount the component with an empty ingredient
+    const wrapper = shallowMount(RecipeDetails, {
+      propsData: {
+        details: {
+          description: 'Delicious recipe',
+          ingredient: '',
+          instruction: 'Chop and cook the ingredients'
+        }
+      }
+    })
+
+    // Check that the ingredient field is rendered with an empty value
+    expect(wrapper.text()).toContain('Main Ingredients: ')
+  })
+
+  it('handles empty instruction field correctly', () => {
+    // Mount the component with an empty instruction
+    const wrapper = shallowMount(RecipeDetails, {
+      propsData: {
+        details: {
+          description: 'Delicious recipe',
+          ingredient: 'Tomato, Onion, Garlic',
+          instruction: ''
+        }
+      }
+    })
+
+    // Check that the instruction field is rendered with an empty value
+    expect(wrapper.text()).toContain('Recipe Instruction: ')
+  })
+
+  it('renders correctly with missing fields (null or undefined)', () => {
+    // Mount the component with some missing fields (null values)
+    const wrapper = shallowMount(RecipeDetails, {
+      propsData: {
+        details: {
+          description: null,
+          ingredient: 'Tomato, Onion, Garlic',
+          instruction: null
+        }
+      }
+    })
+
+    // Check that the missing description and instruction fields are rendered as empty
+    expect(wrapper.text()).toContain('Recipe Description: ')
+    expect(wrapper.text()).toContain('Recipe Instruction: ')
+  })
+
+  it('renders correctly when all fields are empty or null', () => {
+    // Mount the component with all fields empty or null
+    const wrapper = shallowMount(RecipeDetails, {
+      propsData: {
+        details: {
+          description: null,
+          ingredient: null,
+          instruction: null
+        }
+      }
+    })
+
+    // Check that all fields are rendered as empty
+    expect(wrapper.text()).toContain('Recipe Description: ')
+    expect(wrapper.text()).toContain('Main Ingredients: ')
+    expect(wrapper.text()).toContain('Recipe Instruction: ')
+  })
+})
