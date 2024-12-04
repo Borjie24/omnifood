@@ -1,0 +1,139 @@
+import pytest
+from flask import Flask
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from flask_sqlalchemy import SQLAlchemy
+from src.setup_db_example.models.m_recipe import RecipeDb
+from src.setup_db_example.database import db
+
+@pytest.fixture
+def app():
+    # Flask app setup for testing
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'  
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = 'testsecret'
+    
+    db.init_app(app)
+    
+    # Initialize Flask-Admin and add the view
+    admin = Admin(app, url="/vsf_db/admin")
+    admin.add_view(ExportableModelView(RecipeDb, db.session))
+    
+    return app
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
+
+def test_admin_export(client):
+    """Test if the Export button is available and works correctly."""
+    # Access the admin panel's RecipeDb page
+    response = client.get('/vsf_db/admin/model/recipedb/')
+    assert response.status_code == 200
+    assert b'Export' in response.data  
+
+--------------------------------------------------------------
+import pytest
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+import os
+
+# Mock the function initialize_database
+from src.setup_db_example import initialize_database
+
+
+@pytest.fixture
+def app():
+    """Create and configure a new Flask app for each test."""
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5432/db_nexus_app'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable modification tracking
+    app.config['TESTING'] = True  # Enable testing mode
+
+    # Initialize the database
+    initialize_database(app)
+    
+    return app
+
+
+@pytest.fixture
+def client(app):
+    """Create a test client for the app."""
+    return app.test_client()
+
+
+def test_initialize_database(client):
+    """Test that the database initializes and migrations are applied successfully."""
+    # Ensure the database is available
+    with client.application.app_context():
+        try:
+            # Perform a simple query to check if the database connection is working
+            result = client.application.db.session.execute('SELECT 1')
+            assert result is not None
+        except Exception as e:
+            pytest.fail(f"Database initialization failed: {e}")
+
+def test_migration(app):
+    """Test that the Alembic migration is being applied successfully."""
+    with app.app_context():
+        try:
+            # Run the migration manually and check for errors
+            from flask_migrate import upgrade
+            upgrade()  # This will apply migrations
+            print("Migration successful")
+        except Exception as e:
+            pytest.fail(f"Migration failed: {e}")
+--------------------------------------
+
+import pytest
+from flask import Flask
+from src.setup_db_example import create_app
+from flask_sqlalchemy import SQLAlchemy
+
+# Assuming the app creates a SQLAlchemy object with the database URI correctly
+@pytest.fixture
+def app():
+    """Create and configure a new Flask app for each test."""
+    app = create_app()
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5432/db_nexus_app'  # Adjust this for testing
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['TESTING'] = True  # Enable testing mode
+    return app
+
+
+@pytest.fixture
+def client(app):
+    """Create a test client for the app."""
+    return app.test_client()
+
+
+def test_create_app(client):
+    """Test that the app initializes correctly and routes are registered."""
+    
+    # Check that the app's context is available
+    with client.application.app_context():
+        assert client.application is not None
+
+        # Check that the route for recipe DB is registered
+        # Replace `/recipe` with the actual route defined in your blueprint
+        response = client.get('/recipe')  # Make sure this matches your actual route path
+        assert response.status_code == 200  # Check that the route returns a 200 status code
+
+
+def test_initialize_database(client):
+    """Test that the database is initialized correctly."""
+    with client.application.app_context():
+        # Check the database connection
+        result = client.application.db.session.execute('SELECT 1')
+        assert result is not None
+
+
+def test_admin_interface(client):
+    """Test that the admin interface initializes correctly."""
+    with client.application.app_context():
+        # Test admin routes or any specific admin logic
+        # For example, you can check if the admin dashboard is accessible
+        response = client.get('/vsf_db/admin')  # Adjust this URL as per your admin setup
+        assert response.status_code == 200
